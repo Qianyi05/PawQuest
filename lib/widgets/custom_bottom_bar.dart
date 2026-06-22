@@ -34,8 +34,9 @@ class CustomBottomBar extends StatelessWidget {
               children: [
                 _buildIcon('assets/images/icons/ic_home.png', 0),
                 _buildIcon('assets/images/icons/ic_badge.png', 1),
-                _buildIcon('assets/images/icons/ic_community.png', 2),
-                _buildIcon('assets/images/icons/ic_user.png', 3),
+                _buildIcon(Icons.cloud, 2),
+                _buildIcon('assets/images/icons/ic_community.png', 3),
+                _buildIcon('assets/images/icons/ic_user.png', 4),
               ],
             ),
           ),
@@ -44,7 +45,7 @@ class CustomBottomBar extends StatelessWidget {
     );
   }
 
-  Widget _buildIcon(String iconPath, int index) {
+  Widget _buildIcon(Object icon, int index) {
     final isSelected = index == currentIndex;
 
     return GestureDetector(
@@ -53,12 +54,18 @@ class CustomBottomBar extends StatelessWidget {
         width: 70,
         height: 70,
         alignment: Alignment.center,
-        child: Image.asset(
-          iconPath,
-          color: isSelected ? Colors.blueAccent : Colors.grey,
-          width:50,
-          height: 50,
-        ),
+        child: icon is IconData
+            ? Icon(
+                icon,
+                color: isSelected ? Colors.blueAccent : Colors.grey,
+                size: 42,
+              )
+            : Image.asset(
+                icon as String,
+                color: isSelected ? Colors.blueAccent : Colors.grey,
+                width: 50,
+                height: 50,
+              ),
       ),
     );
   }

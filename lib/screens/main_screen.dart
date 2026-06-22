@@ -6,13 +6,8 @@ import 'package:pawquest/screens/home_screen.dart';
 import 'package:pawquest/screens/foodsticker_screen.dart';
 import 'package:pawquest/screens/community_screen.dart';
 import 'package:pawquest/screens/user_screen.dart';
+import 'package:pawquest/screens/weather_screen.dart';
 import '../widgets/custom_bottom_bar.dart';
-
-
-
-
-
-
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,8 +37,6 @@ class PawQuestApp extends StatelessWidget {
         ),
       ),
       home: const SplashScreen(),
-     
-      
     );
   }
 }
@@ -66,9 +59,9 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _pages = [
     const HomeScreen(),
     const FoodStickerScreen(),
-    CommunityScreen(), // 
+    const WeatherScreen(),
+    CommunityScreen(), //
     const UserScreen(),
-    
   ];
 
   @override
@@ -81,7 +74,7 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       // appBar: AppBar(
-      //   title: const Text('Main Screen'), 
+      //   title: const Text('Main Screen'),
       // ),
       extendBody: true,
       body: _pages[_currentIndex],
@@ -96,6 +89,3 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 }
-
-
-

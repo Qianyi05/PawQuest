@@ -37,9 +37,9 @@
 Allow local network access for Flutter’s hot reload and debugging.
 </string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>This app uses your location to show your journey.</string>
+	<string>PawQuest uses your location to fetch local weather and create daily walking quests.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>We need your location to show your position on the map.</string>
+	<string>PawQuest needs your location to show current weather and generate your Daily Quest.</string>
 	<key>NSCameraUsageDescription</key>
 	<string></string>
 	<key>NSPhotoLibraryUsageDescription</key>

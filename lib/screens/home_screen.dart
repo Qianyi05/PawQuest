@@ -36,7 +36,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-
   // ⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐
   // 这里是我唯一添加的代码，其余一行都没动
   @override
@@ -54,10 +53,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
   // ⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐
 
-
   Future<List<City>> loadCities(BuildContext context) async {
-    final jsonStr =
-        await DefaultAssetBundle.of(context).loadString('assets/config/cities.json');
+    final jsonStr = await DefaultAssetBundle.of(context)
+        .loadString('assets/config/cities.json');
     print('✅ Loaded cities.json content: $jsonStr');
     final List decoded = jsonDecode(jsonStr);
     return decoded.map((e) => City.fromJson(e)).toList();
@@ -68,24 +66,12 @@ class _HomeScreenState extends State<HomeScreen> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    final doc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .get();
-    if (!doc.exists) return;
-
-    final data = doc.data();
-    if (data == null) return;
-
-    if (!mounted) return;
-
     final stepProvider = Provider.of<StepProvider>(context, listen: false);
-    stepProvider.setSteps(data['currentStep'] ?? 0);
+    await stepProvider.loadSavedSteps();
   }
 
   @override
   Widget build(BuildContext context) {
-
     final steps = context.watch<StepProvider>().steps ?? 0;
     final stepProvider = Provider.of<StepProvider>(context, listen: false);
     final user = FirebaseAuth.instance.currentUser;
@@ -96,7 +82,8 @@ class _HomeScreenState extends State<HomeScreen> {
         if (!snapshot.hasData) {
           return const Scaffold(
             backgroundColor: Color(0xFFFFF6EB),
-            body: Center(child: CircularProgressIndicator(color: Color(0xFFF96B29))),
+            body: Center(
+                child: CircularProgressIndicator(color: Color(0xFFF96B29))),
           );
         }
 
@@ -116,7 +103,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   fit: BoxFit.cover,
                 ),
               ),
-
               Positioned(
                 top: 180,
                 left: 0,
@@ -130,13 +116,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         width: 320,
                         fit: BoxFit.contain,
                       ),
-
                       Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const SizedBox(height: 40),
                           const SizedBox(height: 8),
-
                           Text(
                             '$steps',
                             style: const TextStyle(
@@ -152,9 +136,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ],
                             ),
                           ),
-
                           const SizedBox(height: 12),
-
                           ElevatedButton.icon(
                             onPressed: () {
                               Navigator.push(
@@ -179,7 +161,6 @@ class _HomeScreenState extends State<HomeScreen> {
                               style: TextStyle(fontSize: 16),
                             ),
                           ),
-
                           const SizedBox(height: 20),
                         ],
                       ),
@@ -187,7 +168,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-
               if (kDebugMode)
                 Positioned(
                   top: 50,
@@ -200,7 +180,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: const Text('+1000 steps'),
                   ),
                 ),
-
               if (user != null)
                 FutureBuilder<DocumentSnapshot>(
                   future: FirebaseFirestore.instance
@@ -228,7 +207,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     );
                   },
                 ),
-
               Positioned(
                 top: 40,
                 right: 20,

@@ -4,30 +4,54 @@ import 'package:pedometer/pedometer.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'daily_quest_provider.dart';
 
 class StepProvider with ChangeNotifier {
-
-  
   int _currentStep = 0;
+  int _todaySteps = 0;
   int get steps => _currentStep;
+  int get todaySteps => _todaySteps;
 
   StreamSubscription<StepCount>? _subscription;
   int? _initialSensorSteps;
+  String? _activeDateKey;
+  DailyQuestProvider? _dailyQuestProvider;
 
   final _auth = FirebaseAuth.instance;
   final _firestore = FirebaseFirestore.instance;
+
+  void attachDailyQuestProvider(DailyQuestProvider provider) {
+    _dailyQuestProvider = provider;
+  }
 
   /// Load current step from Firestore
   Future<void> loadSavedSteps() async {
     final uid = _auth.currentUser?.uid;
     if (uid == null) return;
 
+    final dateStr = _todayDateKey();
+    _activeDateKey = dateStr;
+
     final doc = await _firestore.collection('users').doc(uid).get();
 
     if (doc.exists && doc.data()?['currentStep'] != null) {
       _currentStep = doc.data()!['currentStep'];
-      notifyListeners();
     }
+
+    final todayDoc = await _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('step_history')
+        .doc(dateStr)
+        .get();
+
+    if (todayDoc.exists && todayDoc.data()?['daily'] != null) {
+      _todaySteps = todayDoc.data()!['daily'];
+    } else {
+      _todaySteps = 0;
+    }
+
+    notifyListeners();
   }
 
   /// Start listening to step sensor (REAL DEVICE)
@@ -49,65 +73,57 @@ class StepProvider with ChangeNotifier {
     if (delta <= 0) return;
 
     _currentStep += delta;
+    _todaySteps += delta;
     _initialSensorSteps = event.steps;
 
     notifyListeners();
-    await _saveToFirestore();
+    await _saveToFirestore(delta);
   }
 
   /// Debug steps (SIMULATOR)
   void addDebugSteps(int count) async {
     _currentStep += count;
+    _todaySteps += count;
     notifyListeners();
-    await _saveToFirestore();
+    await _saveToFirestore(count);
   }
 
   /// ✅ CORRECT _saveToFirestore — only one version!
- Future<void> _saveToFirestore() async {
-  final uid = _auth.currentUser?.uid;
-  if (uid == null) return;
+  Future<void> _saveToFirestore(int deltaSteps) async {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) return;
 
-  final now = DateTime.now();
-  final dateStr =
-      "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+    final dateStr = _todayDateKey();
+    if (_activeDateKey != dateStr) {
+      _activeDateKey = dateStr;
+      _todaySteps = deltaSteps;
+    }
 
-  // 1. 获取昨天的步数
-  final yesterday = DateTime(now.year, now.month, now.day - 1);
-  final yStr =
-      "${yesterday.year}-${yesterday.month.toString().padLeft(2, '0')}-${yesterday.day.toString().padLeft(2, '0')}";
+    final safeDailySteps = _todaySteps < 0 ? 0 : _todaySteps;
+    notifyListeners();
 
-  int yesterdayTotal = 0;
+    // currentStep is the lifetime total. step_history.daily is today's steps.
+    await _firestore.collection('users').doc(uid).set({
+      'currentStep': _currentStep,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
 
-  final yDoc = await _firestore
-      .collection('users')
-      .doc(uid)
-      .collection('step_history')
-      .doc(yStr)
-      .get();
+    await _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('step_history')
+        .doc(dateStr)
+        .set({
+      'total': _currentStep,
+      'daily': safeDailySteps, // 防止负数
+      'date': dateStr,
+      'timestamp': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
 
-  if (yDoc.exists && yDoc.data()?['total'] != null) {
-    yesterdayTotal = yDoc.data()!['total'];
+    await _dailyQuestProvider?.syncSteps(safeDailySteps);
+
+    print("🔥 Daily steps saved: $safeDailySteps for $dateStr");
   }
-
-  // 2. 计算今日步数差值
-  final dailySteps = _currentStep - yesterdayTotal;
-
-  // 3. 写入 Firestore：总步数 + 今日步数
-  await _firestore
-      .collection('users')
-      .doc(uid)
-      .collection('step_history')
-      .doc(dateStr)
-      .set({
-    'total': _currentStep,
-    'daily': dailySteps < 0 ? _currentStep : dailySteps, // 防止负数
-    'date': dateStr,
-    'timestamp': FieldValue.serverTimestamp(),
-  }, SetOptions(merge: true));
-
-  print("🔥 Daily steps saved: $dailySteps for $dateStr");
-}
-
 
   /// Stop listener
   void disposeListener() {
@@ -117,16 +133,23 @@ class StepProvider with ChangeNotifier {
   /// Reset when logout
   void resetSteps() {
     _currentStep = 0;
+    _todaySteps = 0;
     notifyListeners();
-    
   }
 
   /// Set steps manually (e.g. after login)
   void setSteps(int newSteps) {
     _currentStep = newSteps;
     notifyListeners();
-
   }
 
+  void setTodaySteps(int newSteps) {
+    _todaySteps = newSteps;
+    notifyListeners();
+  }
 
+  String _todayDateKey() {
+    final now = DateTime.now();
+    return "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+  }
 }
