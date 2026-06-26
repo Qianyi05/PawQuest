@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:pawquest/services/forum_service.dart';
 import 'post_detail_screen.dart';
 
 class CommunityScreen extends StatelessWidget {
+  CommunityScreen({super.key});
+
+  final ForumService _forum = ForumService();
+
   @override
   Widget build(BuildContext context) {
     final currentUser = FirebaseAuth.instance.currentUser;
@@ -11,29 +16,23 @@ class CommunityScreen extends StatelessWidget {
     return Scaffold(
       body: Stack(
         children: [
-          /// ⭐ 固定背景图（和 Food Journey 一样）
+          /// 固定背景图
           Positioned.fill(
             child: Image.asset(
               "assets/images/talk_bg.jpeg",
               fit: BoxFit.cover,
             ),
           ),
-
           SafeArea(
             child: Column(
               children: [
                 const SizedBox(height: 10),
-
-                /// ⭐ 这里替换成你的 talk.png 标题图片
                 Image.asset(
                   "assets/images/title/talk.png",
                   height: 120,
                   fit: BoxFit.contain,
                 ),
-
                 const SizedBox(height: 10),
-
-                /// ⭐ 主体内容（帖子列表）
                 Expanded(
                   child: StreamBuilder<QuerySnapshot>(
                     stream: FirebaseFirestore.instance
@@ -41,89 +40,35 @@ class CommunityScreen extends StatelessWidget {
                         .orderBy('timestamp', descending: true)
                         .snapshots(),
                     builder: (context, snapshot) {
-                      if (!snapshot.hasData) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
                         return const Center(child: CircularProgressIndicator());
                       }
 
-                      final posts = snapshot.data!.docs;
+                      final posts = snapshot.data?.docs ?? [];
+
+                      if (posts.isEmpty) {
+                        return const Center(
+                          child: Text(
+                            'No posts yet — be the first to share!',
+                            style: TextStyle(
+                              color: Color(0xFF6B4F3A),
+                              fontSize: 16,
+                            ),
+                          ),
+                        );
+                      }
 
                       return ListView.builder(
-                        padding: const EdgeInsets.only(bottom: 120),
+                        padding: const EdgeInsets.fromLTRB(12, 0, 12, 120),
                         itemCount: posts.length,
                         itemBuilder: (context, index) {
-                          final postData = posts[index].data() as Map<String, dynamic>;
-                          final postId = posts[index].id;
-                          final isAuthor = currentUser != null &&
-                              currentUser.uid == postData['authorId'];
-
-                          return ListTile(
-                            title: Text(
-                              postData['authorName'] ?? 'Anonymous user',
-                              style: const TextStyle(
-                                fontSize: 18,
-                                color: Color(0xFF6B4F3A),
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            subtitle: Text(
-                              postData['content'] ?? '',
-                              style: const TextStyle(
-                                fontSize: 15,
-                                color: Colors.black87,
-                              ),
-                            ),
-                            trailing: Text(
-                              postData['timestamp']?.toDate().toString().substring(0, 16) ?? '',
-                              style: const TextStyle(fontSize: 12, color: Colors.grey),
-                            ),
-
-                            /// ⭐ 跳转帖子详情
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => PostDetailScreen(
-                                    postId: postId,
-                                    authorName: postData['authorName'] ?? 'Anonymous user',
-                                    content: postData['content'] ?? '',
-                                    timestamp: postData['timestamp'],
-                                  ),
-                                ),
-                              );
-                            },
-
-                            /// ⭐ 长按删除（作者可删）
-                            onLongPress: isAuthor
-                                ? () async {
-                                    final confirm = await showDialog(
-                                      context: context,
-                                      builder: (context) => AlertDialog(
-                                        title: const Text('Confirm Delete'),
-                                        content: const Text(
-                                            'Do you really want to delete this post?'),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () =>
-                                                Navigator.pop(context, false),
-                                            child: const Text('Cancel'),
-                                          ),
-                                          TextButton(
-                                            onPressed: () =>
-                                                Navigator.pop(context, true),
-                                            child: const Text('Delete'),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-
-                                    if (confirm == true) {
-                                      await FirebaseFirestore.instance
-                                          .collection('posts')
-                                          .doc(postId)
-                                          .delete();
-                                    }
-                                  }
-                                : null,
+                          final doc = posts[index];
+                          final postData = doc.data() as Map<String, dynamic>;
+                          return _PostCard(
+                            postId: doc.id,
+                            postData: postData,
+                            currentUid: currentUser?.uid,
+                            forum: _forum,
                           );
                         },
                       );
@@ -135,23 +80,19 @@ class CommunityScreen extends StatelessWidget {
           ),
         ],
       ),
-
-      /// ⭐ 创建帖子按钮（上移以避免挡住导航栏）
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 80),
         child: FloatingActionButton(
           backgroundColor: Colors.amberAccent,
           child: const Icon(Icons.add, color: Colors.brown),
-          onPressed: () {
-            _showPostDialog(context);
-          },
+          onPressed: () => _showPostDialog(context),
         ),
       ),
     );
   }
 
   void _showPostDialog(BuildContext context) {
-    final _controller = TextEditingController();
+    final controller = TextEditingController();
     final user = FirebaseAuth.instance.currentUser;
 
     showDialog(
@@ -159,8 +100,10 @@ class CommunityScreen extends StatelessWidget {
       builder: (context) => AlertDialog(
         title: const Text('New Post'),
         content: TextField(
-          controller: _controller,
-          decoration: const InputDecoration(hintText: 'Add a comment...'),
+          controller: controller,
+          maxLines: 4,
+          minLines: 1,
+          decoration: const InputDecoration(hintText: 'Share something...'),
         ),
         actions: [
           TextButton(
@@ -169,22 +112,163 @@ class CommunityScreen extends StatelessWidget {
           ),
           ElevatedButton(
             onPressed: () async {
-              final content = _controller.text.trim();
+              final content = controller.text.trim();
               if (content.isNotEmpty && user != null) {
+                final nickname = await _resolveNickname(user.uid);
                 await FirebaseFirestore.instance.collection('posts').add({
                   'authorId': user.uid,
-                  'authorName': user.displayName ?? 'Anonymous user',
+                  'authorName': nickname,
                   'content': content,
+                  'likes': 0,
+                  'likedBy': <String>[],
                   'timestamp': FieldValue.serverTimestamp(),
                 });
               }
-              
-              Navigator.pop(context);
+              if (context.mounted) Navigator.pop(context);
             },
             child: const Text('Post'),
           ),
         ],
       ),
     );
+  }
+
+  /// Read the nickname from the user's Firestore profile so posts show the
+  /// chosen name instead of the always-null Auth displayName.
+  Future<String> _resolveNickname(String uid) async {
+    try {
+      final doc =
+          await FirebaseFirestore.instance.collection('users').doc(uid).get();
+      final nickname = (doc.data()?['nickname'] as String?)?.trim();
+      if (nickname != null && nickname.isNotEmpty) return nickname;
+    } catch (_) {
+      // fall through to default
+    }
+    return 'Anonymous user';
+  }
+}
+
+class _PostCard extends StatelessWidget {
+  const _PostCard({
+    required this.postId,
+    required this.postData,
+    required this.currentUid,
+    required this.forum,
+  });
+
+  final String postId;
+  final Map<String, dynamic> postData;
+  final String? currentUid;
+  final ForumService forum;
+
+  @override
+  Widget build(BuildContext context) {
+    final isAuthor = currentUid != null && currentUid == postData['authorId'];
+    final liked = forum.isLikedBy(postData, currentUid);
+    final likes = forum.likeCount(postData);
+    final ts = postData['timestamp'];
+    final timeLabel = ts is Timestamp
+        ? ts.toDate().toString().substring(0, 16)
+        : '';
+
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      color: Colors.white.withOpacity(0.92),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PostDetailScreen(
+              postId: postId,
+              authorName: postData['authorName'] ?? 'Anonymous user',
+              content: postData['content'] ?? '',
+              timestamp: ts is Timestamp ? ts : Timestamp.now(),
+            ),
+          ),
+        ),
+        onLongPress: isAuthor ? () => _confirmDelete(context) : null,
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      postData['authorName'] ?? 'Anonymous user',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Color(0xFF6B4F3A),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    timeLabel,
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                postData['content'] ?? '',
+                style: const TextStyle(fontSize: 15, color: Colors.black87),
+              ),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  IconButton(
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    icon: Icon(
+                      liked ? Icons.favorite : Icons.favorite_border,
+                      color: liked ? Colors.redAccent : Colors.grey,
+                      size: 22,
+                    ),
+                    onPressed: currentUid == null
+                        ? null
+                        : () => forum.togglePostLike(postId),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '$likes',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFF6B4F3A),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _confirmDelete(BuildContext context) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Delete'),
+        content: const Text('Do you really want to delete this post?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirm == true) {
+      await FirebaseFirestore.instance.collection('posts').doc(postId).delete();
+    }
   }
 }

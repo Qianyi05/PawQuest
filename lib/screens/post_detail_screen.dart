@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
+import 'package:pawquest/services/forum_service.dart';
 
 class PostDetailScreen extends StatelessWidget {
   final String postId;
@@ -17,6 +17,7 @@ class PostDetailScreen extends StatelessWidget {
   });
 
   final TextEditingController _commentController = TextEditingController();
+  final ForumService _forum = ForumService();
 
   @override
   Widget build(BuildContext context) {
@@ -63,6 +64,42 @@ class PostDetailScreen extends StatelessWidget {
                         Text(
                           timestamp.toDate().toString().substring(0, 16),
                           style: TextStyle(color: Colors.grey),
+                        ),
+                        const SizedBox(height: 8),
+                        StreamBuilder<DocumentSnapshot>(
+                          stream: FirebaseFirestore.instance
+                              .collection('posts')
+                              .doc(postId)
+                              .snapshots(),
+                          builder: (context, snap) {
+                            final data =
+                                snap.data?.data() as Map<String, dynamic>?;
+                            final liked = data != null &&
+                                _forum.isLikedBy(data, user?.uid);
+                            final likes =
+                                data != null ? _forum.likeCount(data) : 0;
+                            return Row(
+                              children: [
+                                IconButton(
+                                  visualDensity: VisualDensity.compact,
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(),
+                                  icon: Icon(
+                                    liked
+                                        ? Icons.favorite
+                                        : Icons.favorite_border,
+                                    color:
+                                        liked ? Colors.redAccent : Colors.grey,
+                                  ),
+                                  onPressed: user == null
+                                      ? null
+                                      : () => _forum.togglePostLike(postId),
+                                ),
+                                const SizedBox(width: 4),
+                                Text('$likes'),
+                              ],
+                            );
+                          },
                         ),
                       ],
                     ),
