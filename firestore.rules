@@ -1,0 +1,80 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------------------------------------------------------------
+    // 用户数据：本人可读写自己的所有子集合
+    // ---------------------------------------------------------------
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // 通知：允许"别人"在你名下创建一条通知（点赞/评论触发）。
+    // 读取/标记已读/删除仍只限本人（由上面的递归规则覆盖）。
+    // 创建者必须把 actorId 设成自己，且 read 必须为 false，防止伪造。
+    match /users/{userId}/notifications/{notifId} {
+      allow create: if request.auth != null
+                    && request.resource.data.actorId == request.auth.uid
+                    && request.resource.data.read == false;
+    }
+
+    // ---------------------------------------------------------------
+    // 城市：所有人只读
+    // ---------------------------------------------------------------
+    match /cities/{cityId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /cities/{cityId}/{document=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // ---------------------------------------------------------------
+    // 帖子：所有人可读；作者可全权改/删；
+    // 其他登录用户"只能"改 likes / likedBy 两个字段（点赞）。
+    // ---------------------------------------------------------------
+    match /posts/{postId} {
+      allow read: if true;
+      allow create: if request.auth != null
+                    && request.resource.data.authorId == request.auth.uid;
+      allow update: if request.auth != null && (
+                      resource.data.authorId == request.auth.uid ||
+                      request.resource.data.diff(resource.data)
+                        .affectedKeys().hasOnly(['likes', 'likedBy'])
+                    );
+      allow delete: if request.auth != null
+                    && resource.data.authorId == request.auth.uid;
+
+      // 评论是帖子的子集合：所有人可读；登录用户可发；只有评论作者能删。
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if request.auth != null
+                      && request.resource.data.authorId == request.auth.uid;
+        allow delete: if request.auth != null
+                      && resource.data.authorId == request.auth.uid;
+        allow update: if false;
+      }
+    }
+
+    // ---------------------------------------------------------------
+    // 天气 / 每日任务：暂时允许登录用户读写（后续可按实际集合收紧）
+    // ---------------------------------------------------------------
+    match /dailyTasks/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+    match /weatherTasks/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+    match /weatherQuests/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+    match /daily_tasks/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+    match /weather_quests/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
