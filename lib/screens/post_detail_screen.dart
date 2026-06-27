@@ -25,10 +25,11 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   final TextEditingController _commentController = TextEditingController();
   final ForumService _forum = ForumService();
 
-  // When replying to a comment these hold the target; null = top-level comment.
-  String? _replyingToId;
+  // Active reply target; all null = writing a new top-level comment.
+  String? _replyingToId; // the comment/reply being answered
   String? _replyingToName;
   String? _replyingToAuthorId;
+  String? _replyingRootId; // the thread root (top-level comment id)
 
   @override
   void dispose() {
@@ -36,11 +37,17 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     super.dispose();
   }
 
-  void _startReply(String commentId, String name, String authorId) {
+  void _startReply({
+    required String commentId,
+    required String name,
+    required String authorId,
+    required String rootId,
+  }) {
     setState(() {
       _replyingToId = commentId;
       _replyingToName = name;
       _replyingToAuthorId = authorId;
+      _replyingRootId = rootId;
     });
   }
 
@@ -49,6 +56,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       _replyingToId = null;
       _replyingToName = null;
       _replyingToAuthorId = null;
+      _replyingRootId = null;
     });
   }
 
@@ -60,6 +68,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       text,
       parentId: _replyingToId,
       parentAuthorId: _replyingToAuthorId,
+      parentName: _replyingToName,
+      rootId: _replyingRootId,
     );
     _commentController.clear();
     _cancelReply();
@@ -165,7 +175,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                   ),
                                   onPressed: user == null
                                       ? null
-                                      : () => _forum.togglePostLike(widget.postId),
+                                      : () =>
+                                          _forum.togglePostLike(widget.postId),
                                 ),
                                 const SizedBox(width: 4),
                                 Text('$likes'),
@@ -199,9 +210,10 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                         return const Center(child: Text('No Comments'));
                       }
 
-                      // Split into top-level comments and replies-by-parent.
+                      // Top-level comments vs. replies grouped by thread root.
+                      // Old replies (pre-rootId) fall back to parentId as root.
                       final topLevel = <QueryDocumentSnapshot>[];
-                      final repliesByParent =
+                      final repliesByRoot =
                           <String, List<QueryDocumentSnapshot>>{};
                       for (final d in docs) {
                         final data = d.data() as Map<String, dynamic>;
@@ -209,9 +221,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                         if (parentId == null) {
                           topLevel.add(d);
                         } else {
-                          repliesByParent
-                              .putIfAbsent(parentId, () => [])
-                              .add(d);
+                          final root =
+                              (data['rootId'] as String?) ?? parentId;
+                          repliesByRoot.putIfAbsent(root, () => []).add(d);
                         }
                       }
 
@@ -219,15 +231,16 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                         padding: const EdgeInsets.only(bottom: 8),
                         itemCount: topLevel.length,
                         itemBuilder: (context, index) {
-                          final commentDoc = topLevel[index];
-                          final replies =
-                              repliesByParent[commentDoc.id] ?? const [];
+                          final root = topLevel[index];
+                          final replies = repliesByRoot[root.id] ?? const [];
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _buildComment(commentDoc, user, isReply: false),
+                              _buildComment(root, user,
+                                  isReply: false, rootId: root.id),
                               for (final reply in replies)
-                                _buildComment(reply, user, isReply: true),
+                                _buildComment(reply, user,
+                                    isReply: true, rootId: root.id),
                             ],
                           );
                         },
@@ -295,9 +308,11 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     QueryDocumentSnapshot doc,
     User? user, {
     required bool isReply,
+    required String rootId,
   }) {
     final comment = doc.data() as Map<String, dynamic>;
     final authorName = comment['authorName'] ?? 'Unknown User';
+    final replyToName = comment['replyToName'] as String?;
     final isAuthor = user != null && user.uid == comment['authorId'];
     final ts = comment['timestamp'];
     final timeLabel =
@@ -331,10 +346,21 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                 ),
               ],
             ),
+            // Mention line so people can see who a reply addresses.
+            if (isReply && replyToName != null && replyToName.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Text(
+                  '↳ $replyToName',
+                  style: const TextStyle(
+                      fontSize: 12, color: Color(0xFF9C7B53)),
+                ),
+              ),
             const SizedBox(height: 4),
             Text(comment['content'] ?? ''),
-            // Only top-level comments can be replied to (one level of nesting).
-            if (!isReply && user != null)
+            // Every comment and reply can be answered, so conversation can
+            // continue indefinitely (all kept one level deep under the root).
+            if (user != null)
               Align(
                 alignment: Alignment.centerLeft,
                 child: TextButton(
@@ -344,12 +370,14 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                   onPressed: () => _startReply(
-                    doc.id,
-                    authorName,
-                    comment['authorId'] ?? '',
+                    commentId: doc.id,
+                    name: authorName,
+                    authorId: comment['authorId'] ?? '',
+                    rootId: rootId,
                   ),
                   child: const Text('Reply',
-                      style: TextStyle(fontSize: 13, color: Color(0xFF6B4F3A))),
+                      style:
+                          TextStyle(fontSize: 13, color: Color(0xFF6B4F3A))),
                 ),
               ),
           ],

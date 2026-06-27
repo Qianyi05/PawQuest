@@ -106,19 +106,23 @@ class ForumService {
 
   // --------------------------------------------------------------- comments
 
-  /// Adds a comment, or a reply to an existing comment when [parentId] is
-  /// given. Stores the author's nickname (not the always-null Auth
-  /// displayName) and a `parentId` field (null for top-level comments).
+  /// Adds a comment, or a reply to an existing comment/reply when [parentId]
+  /// is given. All replies belonging to one top-level comment share the same
+  /// [rootId] (the top-level comment id), so a conversation can continue
+  /// indefinitely while staying visually one level deep. [parentName] is the
+  /// addressee shown as an "↳ name" mention.
   ///
   /// Notifications:
   /// - a top-level comment notifies the post author
-  /// - a reply notifies the author of the comment being replied to
+  /// - a reply notifies the author of the comment/reply being replied to
   /// (in both cases only when the actor is not the recipient).
   Future<void> addComment(
     String postId,
     String text, {
     String? parentId,
     String? parentAuthorId,
+    String? parentName,
+    String? rootId,
   }) async {
     final uid = _auth.currentUser?.uid;
     final body = text.trim();
@@ -135,6 +139,8 @@ class ForumService {
       'authorName': actorName,
       'content': body,
       'parentId': parentId, // null for top-level comments
+      'rootId': rootId, // thread root (top-level comment id); null for top-level
+      'replyToName': parentName, // addressee, for the "↳ name" mention
       'timestamp': FieldValue.serverTimestamp(),
     });
 
