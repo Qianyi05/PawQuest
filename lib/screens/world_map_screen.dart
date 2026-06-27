@@ -14,11 +14,11 @@ Widget roundedButton({
     onPressed: onPressed,
     style: TextButton.styleFrom(padding: EdgeInsets.zero),
     child: Container(
-      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       decoration: BoxDecoration(
-        color: Color(0xFF546E7A),
+        color: const Color(0xFF546E7A),
         borderRadius: BorderRadius.circular(30),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
             color: Colors.black26,
             blurRadius: 4,
@@ -28,7 +28,7 @@ Widget roundedButton({
       ),
       child: Text(
         label,
-        style: TextStyle(
+        style: const TextStyle(
           color: Colors.white,
           fontSize: 16,
           fontWeight: FontWeight.bold,

@@ -56,7 +56,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => ChooseCatScreen()),
+        MaterialPageRoute(builder: (_) => const ChooseCatScreen()),
       );
     } on FirebaseAuthException catch (e) {
       _showErrorDialog(e.message ?? 'Failed to Register');

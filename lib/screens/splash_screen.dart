@@ -84,8 +84,8 @@ Align(
         ElevatedButton(
           onPressed: () => _goTo(const LoginScreen()),
           style: ElevatedButton.styleFrom(
-            backgroundColor: Color(0xFFEEBF6D),
-            foregroundColor: Color(0xFF6C4A2F),
+            backgroundColor: const Color(0xFFEEBF6D),
+            foregroundColor: const Color(0xFF6C4A2F),
             shape: const StadiumBorder(),
             padding: const EdgeInsets.symmetric(
               horizontal: 30,
@@ -98,8 +98,8 @@ Align(
         ElevatedButton(
           onPressed: () => _goTo(const RegisterScreen()),
           style: ElevatedButton.styleFrom(
-            backgroundColor: Color(0xFFEEBF6D),
-            foregroundColor: Color(0xFF6C4A2F),
+            backgroundColor: const Color(0xFFEEBF6D),
+            foregroundColor: const Color(0xFF6C4A2F),
             shape: const StadiumBorder(),
             padding: const EdgeInsets.symmetric(
               horizontal: 30,

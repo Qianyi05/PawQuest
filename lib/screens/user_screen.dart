@@ -173,25 +173,25 @@ class _UserScreenState extends State<UserScreen> {
                         // ---------------- Profile Content ----------------
                         Expanded(
                           child: SingleChildScrollView(
-                            child: Container(
+                            child: SizedBox(
                               width: MediaQuery.of(context).size.width, // ⭐ 必须加
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  SizedBox(height: 20),
+                                  const SizedBox(height: 20),
                                   CircleAvatar(
                                     radius: 48,
                                     backgroundImage: AssetImage(imagePath),
                                   ),
-                                  SizedBox(height: 16),
+                                  const SizedBox(height: 16),
                                   Text("Username: $nickname",
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                           fontSize: 20,
                                           fontWeight: FontWeight.w600)),
-                                  SizedBox(height: 8),
+                                  const SizedBox(height: 8),
                                   Text("E-mail: $email",
-                                      style: TextStyle(fontSize: 16)),
-                                  SizedBox(height: 8),
+                                      style: const TextStyle(fontSize: 16)),
+                                  const SizedBox(height: 8),
                                   _buildStyledButton(
                                       context,
                                       "Notifications",
@@ -202,26 +202,26 @@ class _UserScreenState extends State<UserScreen> {
                                                     const NotificationsScreen()),
                                           ),
                                       const Color(0xFFEE9B8C)),
-                                  SizedBox(height: 12),
+                                  const SizedBox(height: 12),
                                   _buildStyledButton(
                                       context,
                                       "Modify User Name",
                                       () => _changeDisplayName(context),
                                       Colors.amber),
-                                  SizedBox(height: 12),
+                                  const SizedBox(height: 12),
                                   _buildStyledButton(
                                       context, "Change cat character",
                                       () async {
                                     final selectedCat = await Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                          builder: (_) => ChooseCatScreen()),
+                                          builder: (_) => const ChooseCatScreen()),
                                     );
                                     if (selectedCat != null) {
                                       await _updateCatAvatar(selectedCat);
                                     }
                                   }, Colors.amber),
-                                  SizedBox(height: 12),
+                                  const SizedBox(height: 12),
                                   _buildStyledButton(
                                     context,
                                     "Logout",
@@ -248,7 +248,7 @@ class _UserScreenState extends State<UserScreen> {
                                     },
                                     const Color(0xff6DB4D6),
                                   ),
-                                  SizedBox(height: 40),
+                                  const SizedBox(height: 40),
                                 ],
                               ),
                             ),

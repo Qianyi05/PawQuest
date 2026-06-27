@@ -51,11 +51,11 @@ class FoodSticker extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(14),
-                  boxShadow: [
+                  boxShadow: const [
                     BoxShadow(
                       color: Colors.black12,
                       blurRadius: 6,
-                      offset: const Offset(3, 5),
+                      offset: Offset(3, 5),
                     )
                   ],
                 ),

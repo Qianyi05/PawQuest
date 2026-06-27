@@ -5,6 +5,8 @@ import 'main_screen.dart';
 
 
 class ChooseCatScreen extends StatefulWidget {
+  const ChooseCatScreen({super.key});
+
   @override
   _ChooseCatScreenState createState() => _ChooseCatScreenState();
 }

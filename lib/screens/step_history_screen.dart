@@ -122,8 +122,8 @@ Widget buildBarChart(List<QueryDocumentSnapshot> docs) {
         gridData: FlGridData(
           show: true,
           drawVerticalLine: false,
-          getDrawingHorizontalLine: (value) => FlLine(
-            color: const Color(0xFFEEE2C8),
+          getDrawingHorizontalLine: (value) => const FlLine(
+            color: Color(0xFFEEE2C8),
             strokeWidth: 1,
           ),
         ),
@@ -131,8 +131,8 @@ Widget buildBarChart(List<QueryDocumentSnapshot> docs) {
         borderData: FlBorderData(show: false),
 
         titlesData: FlTitlesData(
-          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
 
           // ----------- X 轴 -----------
           bottomTitles: AxisTitles(

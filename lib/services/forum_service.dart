@@ -131,7 +131,7 @@ class ForumService {
     final actorName = await resolveNickname(uid);
     final postRef = _db.collection('posts').doc(postId);
     final postSnap = await postRef.get();
-    final postData = postSnap.data() as Map<String, dynamic>?;
+    final postData = postSnap.data();
     final preview = _preview(postData?['content']);
 
     await postRef.collection('comments').add({

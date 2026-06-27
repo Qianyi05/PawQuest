@@ -36,7 +36,7 @@ class AppTheme {
         backgroundColor: puddingYellow,
         foregroundColor: puddingBrown,
         elevation: 3,
-        shape: RoundedRectangleBorder(
+        shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(18)),
         ),
         textStyle: const TextStyle(
