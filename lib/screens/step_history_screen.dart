@@ -55,10 +55,17 @@ class StepHistoryScreen extends StatelessWidget {
           // ---- summary stats over all history ----
           int total = 0;
           int best = 0;
+          String bestDate = '';
+          final Map<String, int> dateSteps = {};
           for (final d in docs) {
             final daily = _daily(d);
             total += daily;
-            if (daily > best) best = daily;
+            final date = (d.data() as Map<String, dynamic>)['date'];
+            if (date is String) dateSteps[date] = daily;
+            if (daily > best) {
+              best = daily;
+              bestDate = date is String ? date : '';
+            }
           }
           final activeDays = docs.length;
           final avg = activeDays == 0 ? 0 : (total / activeDays).round();
@@ -66,7 +73,14 @@ class StepHistoryScreen extends StatelessWidget {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              _summaryGrid(total: total, avg: avg, best: best, days: activeDays),
+              _summaryGrid(
+                total: total,
+                avg: avg,
+                best: best,
+                bestDate: bestDate,
+                days: activeDays,
+                onActiveDaysTap: () => _openCalendar(context, dateSteps),
+              ),
               const SizedBox(height: 20),
               _sectionTitle('Last 7 days'),
               const SizedBox(height: 12),
@@ -168,7 +182,9 @@ class StepHistoryScreen extends StatelessWidget {
     required int total,
     required int avg,
     required int best,
+    required String bestDate,
     required int days,
+    required VoidCallback onActiveDaysTap,
   }) {
     return Column(
       children: [
@@ -190,12 +206,22 @@ class StepHistoryScreen extends StatelessWidget {
           children: [
             Expanded(
               child: _statCard(
-                  Icons.emoji_events_rounded, 'Best day', _comma(best), _orange),
+                Icons.emoji_events_rounded,
+                'Best day',
+                _comma(best),
+                _orange,
+                sub: bestDate.isNotEmpty ? bestDate : null,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: _statCard(Icons.calendar_month_rounded, 'Active days',
-                  '$days', _orange),
+              child: _statCard(
+                Icons.calendar_month_rounded,
+                'Active days',
+                '$days',
+                _orange,
+                onTap: onActiveDaysTap,
+              ),
             ),
           ],
         ),
@@ -203,8 +229,15 @@ class StepHistoryScreen extends StatelessWidget {
     );
   }
 
-  Widget _statCard(IconData icon, String label, String value, Color accent) {
-    return Container(
+  Widget _statCard(
+    IconData icon,
+    String label,
+    String value,
+    Color accent, {
+    String? sub,
+    VoidCallback? onTap,
+  }) {
+    final card = Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -231,6 +264,9 @@ class StepHistoryScreen extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
+              if (onTap != null)
+                Icon(Icons.chevron_right_rounded,
+                    size: 18, color: _brown.withValues(alpha: 0.4)),
             ],
           ),
           const SizedBox(height: 8),
@@ -242,8 +278,38 @@ class StepHistoryScreen extends StatelessWidget {
               color: _brown,
             ),
           ),
+          if (sub != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              sub,
+              style: TextStyle(
+                fontSize: 12,
+                color: _brown.withValues(alpha: 0.6),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ],
       ),
+    );
+
+    if (onTap == null) return card;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: card,
+      ),
+    );
+  }
+
+  void _openCalendar(BuildContext context, Map<String, int> dateSteps) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => _ActiveDaysCalendar(dateSteps: dateSteps),
     );
   }
 
@@ -403,6 +469,263 @@ class StepHistoryScreen extends StatelessWidget {
               color: _brown,
               fontWeight: FontWeight.w700,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Bottom-sheet month calendar that highlights days with step records.
+class _ActiveDaysCalendar extends StatefulWidget {
+  final Map<String, int> dateSteps; // key "YYYY-MM-DD" -> steps
+
+  const _ActiveDaysCalendar({required this.dateSteps});
+
+  @override
+  State<_ActiveDaysCalendar> createState() => _ActiveDaysCalendarState();
+}
+
+class _ActiveDaysCalendarState extends State<_ActiveDaysCalendar> {
+  static const Color _cream = Color(0xFFFFF6EB);
+  static const Color _yellow = Color(0xFFF8D66D);
+  static const Color _orange = Color(0xFFF77F42);
+  static const Color _brown = Color(0xFF6B4F3A);
+
+  static const _months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+  static const _weekdays = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
+
+  late DateTime _month; // first day of the visible month
+  String? _selected;
+
+  @override
+  void initState() {
+    super.initState();
+    // Start on the month of the most recent active day, else this month.
+    final keys = widget.dateSteps.keys.toList()..sort();
+    final base = keys.isNotEmpty ? DateTime.tryParse(keys.last) : null;
+    final now = base ?? DateTime.now();
+    _month = DateTime(now.year, now.month, 1);
+  }
+
+  String _key(int y, int m, int d) =>
+      '$y-${m.toString().padLeft(2, '0')}-${d.toString().padLeft(2, '0')}';
+
+  void _shiftMonth(int delta) {
+    setState(() {
+      _month = DateTime(_month.year, _month.month + delta, 1);
+      _selected = null;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final daysInMonth = DateTime(_month.year, _month.month + 1, 0).day;
+    final leadingBlanks = DateTime(_month.year, _month.month, 1).weekday - 1;
+    final today = DateTime.now();
+    final activeThisMonth = widget.dateSteps.keys
+        .where((k) => k.startsWith(
+            '${_month.year}-${_month.month.toString().padLeft(2, '0')}'))
+        .length;
+
+    final cells = <Widget>[];
+    for (int i = 0; i < leadingBlanks; i++) {
+      cells.add(const SizedBox());
+    }
+    for (int day = 1; day <= daysInMonth; day++) {
+      final key = _key(_month.year, _month.month, day);
+      final isActive = widget.dateSteps.containsKey(key);
+      final isToday = today.year == _month.year &&
+          today.month == _month.month &&
+          today.day == day;
+      final isSelected = _selected == key;
+      cells.add(_dayCell(day, key, isActive, isToday, isSelected));
+    }
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: _cream,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: _brown.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                const Icon(Icons.local_fire_department_rounded,
+                    size: 20, color: _orange),
+                const SizedBox(width: 6),
+                const Text(
+                  'Active days',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: _brown,
+                  ),
+                ),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.close_rounded, color: _brown),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            // month navigation
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.chevron_left_rounded, color: _brown),
+                  onPressed: () => _shiftMonth(-1),
+                ),
+                Text(
+                  '${_months[_month.month - 1]} ${_month.year}',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: _brown,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.chevron_right_rounded, color: _brown),
+                  onPressed: () => _shiftMonth(1),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: _weekdays
+                  .map((w) => Expanded(
+                        child: Center(
+                          child: Text(
+                            w,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: _brown.withValues(alpha: 0.55),
+                            ),
+                          ),
+                        ),
+                      ))
+                  .toList(),
+            ),
+            const SizedBox(height: 6),
+            GridView.count(
+              crossAxisCount: 7,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              mainAxisSpacing: 4,
+              crossAxisSpacing: 4,
+              children: cells,
+            ),
+            const SizedBox(height: 12),
+            _footer(activeThisMonth),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _dayCell(
+      int day, String key, bool isActive, bool isToday, bool isSelected) {
+    final bg = isActive ? _orange : Colors.transparent;
+    final textColor = isActive ? Colors.white : _brown;
+
+    return GestureDetector(
+      onTap: isActive ? () => setState(() => _selected = key) : null,
+      child: Container(
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: bg,
+          shape: BoxShape.circle,
+          border: isSelected
+              ? Border.all(color: _brown, width: 2)
+              : (isToday && !isActive
+                  ? Border.all(color: _orange, width: 1.5)
+                  : null),
+        ),
+        child: Text(
+          '$day',
+          style: TextStyle(
+            fontSize: 13,
+            color: textColor,
+            fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _footer(int activeThisMonth) {
+    if (_selected != null) {
+      final steps = widget.dateSteps[_selected] ?? 0;
+      final s = steps.toString().replaceAllMapped(
+          RegExp(r'(\d)(?=(\d{3})+$)'), (m) => '${m[1]},');
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.directions_walk_rounded,
+                size: 18, color: _orange),
+            const SizedBox(width: 8),
+            Text(
+              _selected!,
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold, color: _brown, fontSize: 14),
+            ),
+            const Spacer(),
+            Text(
+              '$s steps',
+              style: const TextStyle(
+                  fontWeight: FontWeight.w700, color: _brown, fontSize: 14),
+            ),
+          ],
+        ),
+      );
+    }
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: _yellow.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 14,
+            height: 14,
+            decoration: const BoxDecoration(
+                color: _orange, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            activeThisMonth == 0
+                ? 'No active days this month'
+                : '$activeThisMonth active ${activeThisMonth == 1 ? 'day' : 'days'} this month · tap one',
+            style: const TextStyle(
+                fontSize: 13, fontWeight: FontWeight.w600, color: _brown),
           ),
         ],
       ),
