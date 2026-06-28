@@ -55,66 +55,45 @@ class _SplashScreenState extends State<SplashScreen>
                 fit: BoxFit.cover,
               ),
             ),
-            // // 半透明渐变遮罩，保证按钮和文字在亮背景上也清晰
-            // Positioned.fill(
-            //   child: Container(
-            //     decoration: BoxDecoration(
-            //       gradient: LinearGradient(
-            //         begin: Alignment.topCenter,
-            //         end: Alignment.bottomCenter,
-            //         stops: const [0.0, 0.5, 1.0],
-            //         colors: [
-            //           Colors.black.withOpacity(0.35),
-            //           Colors.black.withOpacity(0.45),
-            //           Colors.black.withOpacity(0.55),
-            //         ],
-            //       ),
-            //     ),
-            //   ),
-            // ),
-            // 中心内容
-            // 让按钮往下移：整个 Column 移到底部
-Align(
-  alignment: Alignment.bottomCenter,
-  child: Padding(
-    padding: const EdgeInsets.only(bottom: 115), 
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        ElevatedButton(
-          onPressed: () => _goTo(const LoginScreen()),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFEEBF6D),
-            foregroundColor: const Color(0xFF6C4A2F),
-            shape: const StadiumBorder(),
-            padding: const EdgeInsets.symmetric(
-              horizontal: 30,
-              vertical: 10,
+            // 中心内容：底部等宽按钮
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 110),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _welcomeButton('Login', () => _goTo(const LoginScreen())),
+                    const SizedBox(height: 14),
+                    _welcomeButton(
+                        'Register', () => _goTo(const RegisterScreen())),
+                  ],
+                ),
+              ),
             ),
-          ),
-          child: const Text('Login'),
-        ),
-        const SizedBox(height: 10),
-        ElevatedButton(
-          onPressed: () => _goTo(const RegisterScreen()),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFEEBF6D),
-            foregroundColor: const Color(0xFF6C4A2F),
-            shape: const StadiumBorder(),
-            padding: const EdgeInsets.symmetric(
-              horizontal: 30,
-              vertical: 10,
-            ),
-          ),
-          child: const Text('Register'),
-        ),
-      ],
-    ),
-  ),
-),
 
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _welcomeButton(String label, VoidCallback onTap) {
+    return SizedBox(
+      width: 190,
+      height: 52,
+      child: ElevatedButton(
+        onPressed: onTap,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFFEEBF6D),
+          foregroundColor: const Color(0xFF6C4A2F),
+          shape: const StadiumBorder(),
+          elevation: 3,
+          shadowColor: Colors.black26,
+          textStyle:
+              const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+        ),
+        child: Text(label),
       ),
     );
   }
