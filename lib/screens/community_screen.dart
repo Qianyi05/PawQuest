@@ -4,6 +4,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:pawquest/services/forum_service.dart';
 import 'post_detail_screen.dart';
 
+const Color _cream = Color(0xFFFFF6EB);
+const Color _yellow = Color(0xFFF8D66D);
+const Color _orange = Color(0xFFF77F42);
+const Color _brown = Color(0xFF6B4F3A);
+
 class CommunityScreen extends StatelessWidget {
   CommunityScreen({super.key});
 
@@ -14,79 +19,83 @@ class CommunityScreen extends StatelessWidget {
     final currentUser = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
-      body: Stack(
-        children: [
-          /// 固定背景图
-          Positioned.fill(
-            child: Image.asset(
-              "assets/images/talk_bg.jpeg",
-              fit: BoxFit.cover,
+      backgroundColor: _cream,
+      body: SafeArea(
+        child: Column(
+          children: [
+            const SizedBox(height: 8),
+            Image.asset(
+              "assets/images/title/talk.png",
+              height: 104,
+              fit: BoxFit.contain,
             ),
-          ),
-          SafeArea(
-            child: Column(
-              children: [
-                const SizedBox(height: 10),
-                Image.asset(
-                  "assets/images/title/talk.png",
-                  height: 120,
-                  fit: BoxFit.contain,
-                ),
-                const SizedBox(height: 10),
-                Expanded(
-                  child: StreamBuilder<QuerySnapshot>(
-                    stream: FirebaseFirestore.instance
-                        .collection('posts')
-                        .orderBy('timestamp', descending: true)
-                        .snapshots(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
+            const SizedBox(height: 6),
+            Expanded(
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('posts')
+                    .orderBy('timestamp', descending: true)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(
+                        child: CircularProgressIndicator(color: _orange));
+                  }
 
-                      final posts = snapshot.data?.docs ?? [];
+                  final posts = snapshot.data?.docs ?? [];
 
-                      if (posts.isEmpty) {
-                        return const Center(
-                          child: Text(
-                            'No posts yet — be the first to share!',
+                  if (posts.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.forum_outlined,
+                              size: 48,
+                              color: _brown.withValues(alpha: 0.4)),
+                          const SizedBox(height: 10),
+                          const Text(
+                            'No posts yet',
                             style: TextStyle(
-                              color: Color(0xFF6B4F3A),
-                              fontSize: 16,
-                            ),
+                                color: _brown,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold),
                           ),
-                        );
-                      }
+                          Text(
+                            'Be the first to share something!',
+                            style: TextStyle(
+                                color: _brown.withValues(alpha: 0.6),
+                                fontSize: 13),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
 
-                      return ListView.builder(
-                        padding: const EdgeInsets.fromLTRB(12, 0, 12, 120),
-                        itemCount: posts.length,
-                        itemBuilder: (context, index) {
-                          final doc = posts[index];
-                          final postData = doc.data() as Map<String, dynamic>;
-                          return _PostCard(
-                            postId: doc.id,
-                            postData: postData,
-                            currentUid: currentUser?.uid,
-                            forum: _forum,
-                          );
-                        },
+                  return ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(14, 4, 14, 110),
+                    itemCount: posts.length,
+                    itemBuilder: (context, index) {
+                      final doc = posts[index];
+                      final postData = doc.data() as Map<String, dynamic>;
+                      return _PostCard(
+                        postId: doc.id,
+                        postData: postData,
+                        currentUid: currentUser?.uid,
+                        forum: _forum,
                       );
                     },
-                  ),
-                ),
-              ],
+                  );
+                },
+              ),
             ),
-          ),
-        ],
-      ),
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 80),
-        child: FloatingActionButton(
-          backgroundColor: Colors.amberAccent,
-          child: const Icon(Icons.add, color: Colors.brown),
-          onPressed: () => _showPostDialog(context),
+          ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: _orange,
+        elevation: 3,
+        child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
+        onPressed: () => _showPostDialog(context),
       ),
     );
   }
@@ -98,19 +107,41 @@ class CommunityScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('New Post'),
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(22)),
+        title: const Text('New Post',
+            style: TextStyle(color: _brown, fontWeight: FontWeight.bold)),
         content: TextField(
           controller: controller,
           maxLines: 4,
-          minLines: 1,
-          decoration: const InputDecoration(hintText: 'Share something...'),
+          minLines: 2,
+          style: const TextStyle(color: _brown),
+          decoration: InputDecoration(
+            hintText: 'Share something...',
+            hintStyle: TextStyle(color: _brown.withValues(alpha: 0.4)),
+            filled: true,
+            fillColor: _cream,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide.none,
+            ),
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text('Cancel',
+                style: TextStyle(color: _brown.withValues(alpha: 0.7))),
           ),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _orange,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14)),
+            ),
             onPressed: () async {
               final content = controller.text.trim();
               if (content.isNotEmpty && user != null) {
@@ -152,83 +183,110 @@ class _PostCard extends StatelessWidget {
     final isAuthor = currentUid != null && currentUid == postData['authorId'];
     final liked = ForumService.isLikedBy(postData, currentUid);
     final likes = ForumService.likeCount(postData);
+    final author = postData['authorName'] ?? 'Anonymous user';
     final ts = postData['timestamp'];
-    final timeLabel = ts is Timestamp
-        ? ts.toDate().toString().substring(0, 16)
-        : '';
+    final timeLabel =
+        ts is Timestamp ? ts.toDate().toString().substring(0, 16) : '';
 
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      color: Colors.white.withValues(alpha: 0.92),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => PostDetailScreen(
-              postId: postId,
-              authorName: postData['authorName'] ?? 'Anonymous user',
-              content: postData['content'] ?? '',
-              timestamp: ts is Timestamp ? ts : Timestamp.now(),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: const [
+          BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 3)),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PostDetailScreen(
+                postId: postId,
+                authorName: author,
+                content: postData['content'] ?? '',
+                timestamp: ts is Timestamp ? ts : Timestamp.now(),
+              ),
             ),
           ),
-        ),
-        onLongPress: isAuthor ? () => _confirmDelete(context) : null,
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      postData['authorName'] ?? 'Anonymous user',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: Color(0xFF6B4F3A),
-                        fontWeight: FontWeight.w700,
+          onLongPress: isAuthor ? () => _confirmDelete(context) : null,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 16,
+                      backgroundColor: _yellow.withValues(alpha: 0.4),
+                      child: Text(
+                        author.isNotEmpty ? author[0].toUpperCase() : '?',
+                        style: const TextStyle(
+                            color: _brown,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14),
                       ),
                     ),
-                  ),
-                  Text(
-                    timeLabel,
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 6),
-              Text(
-                postData['content'] ?? '',
-                style: const TextStyle(fontSize: 15, color: Colors.black87),
-              ),
-              const SizedBox(height: 6),
-              Row(
-                children: [
-                  IconButton(
-                    visualDensity: VisualDensity.compact,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                    icon: Icon(
-                      liked ? Icons.favorite : Icons.favorite_border,
-                      color: liked ? Colors.redAccent : Colors.grey,
-                      size: 22,
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        author,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          color: _brown,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ),
-                    onPressed: currentUid == null
-                        ? null
-                        : () => forum.togglePostLike(postId),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '$likes',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: Color(0xFF6B4F3A),
+                    Text(
+                      timeLabel,
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: _brown.withValues(alpha: 0.45)),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  postData['content'] ?? '',
+                  style: const TextStyle(
+                      fontSize: 15, color: _brown, height: 1.35),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    IconButton(
+                      visualDensity: VisualDensity.compact,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      icon: Icon(
+                        liked ? Icons.favorite : Icons.favorite_border,
+                        color: liked ? Colors.redAccent : Colors.grey,
+                        size: 22,
+                      ),
+                      onPressed: currentUid == null
+                          ? null
+                          : () => forum.togglePostLike(postId),
+                    ),
+                    const SizedBox(width: 4),
+                    Text('$likes',
+                        style: const TextStyle(fontSize: 13, color: _brown)),
+                    const SizedBox(width: 16),
+                    Icon(Icons.mode_comment_outlined,
+                        size: 18, color: _brown.withValues(alpha: 0.5)),
+                    const SizedBox(width: 4),
+                    Text('Reply',
+                        style: TextStyle(
+                            fontSize: 13,
+                            color: _brown.withValues(alpha: 0.55))),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
