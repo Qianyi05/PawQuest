@@ -3,9 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:pawquest/services/forum_service.dart';
 import 'post_detail_screen.dart';
+import '../widgets/user_avatar.dart';
 
 const Color _cream = Color(0xFFFFF6EB);
-const Color _yellow = Color(0xFFF8D66D);
 const Color _orange = Color(0xFFF77F42);
 const Color _brown = Color(0xFF6B4F3A);
 
@@ -91,11 +91,16 @@ class CommunityScreen extends StatelessWidget {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: _orange,
-        elevation: 3,
-        child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
-        onPressed: () => _showPostDialog(context),
+      floatingActionButton: Padding(
+        // MainScreen uses extendBody:true, so lift the FAB above the floating
+        // bottom bar.
+        padding: const EdgeInsets.only(bottom: 80),
+        child: FloatingActionButton(
+          backgroundColor: _orange,
+          elevation: 3,
+          child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
+          onPressed: () => _showPostDialog(context),
+        ),
       ),
     );
   }
@@ -209,6 +214,7 @@ class _PostCard extends StatelessWidget {
                 authorName: author,
                 content: postData['content'] ?? '',
                 timestamp: ts is Timestamp ? ts : Timestamp.now(),
+                authorId: postData['authorId'] as String?,
               ),
             ),
           ),
@@ -220,16 +226,10 @@ class _PostCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    CircleAvatar(
+                    UserAvatar(
+                      userId: postData['authorId'] as String?,
+                      fallbackName: author,
                       radius: 16,
-                      backgroundColor: _yellow.withValues(alpha: 0.4),
-                      child: Text(
-                        author.isNotEmpty ? author[0].toUpperCase() : '?',
-                        style: const TextStyle(
-                            color: _brown,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14),
-                      ),
                     ),
                     const SizedBox(width: 10),
                     Expanded(

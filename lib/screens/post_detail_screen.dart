@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:pawquest/services/forum_service.dart';
+import '../widgets/user_avatar.dart';
 
 class PostDetailScreen extends StatefulWidget {
   final String postId;
   final String authorName;
   final String content;
   final Timestamp timestamp;
+  final String? authorId;
 
   const PostDetailScreen({
     super.key,
@@ -15,6 +17,7 @@ class PostDetailScreen extends StatefulWidget {
     required this.authorName,
     required this.content,
     required this.timestamp,
+    this.authorId,
   });
 
   @override
@@ -261,16 +264,10 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         children: [
           Row(
             children: [
-              CircleAvatar(
+              UserAvatar(
+                userId: widget.authorId,
+                fallbackName: widget.authorName,
                 radius: 16,
-                backgroundColor: _yellow.withValues(alpha: 0.4),
-                child: Text(
-                  widget.authorName.isNotEmpty
-                      ? widget.authorName[0].toUpperCase()
-                      : '?',
-                  style: const TextStyle(
-                      color: _brown, fontWeight: FontWeight.bold, fontSize: 14),
-                ),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -410,57 +407,75 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                 ),
               )
             : null,
-        child: Column(
+        child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  authorName,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, color: _brown),
-                ),
-                Text(
-                  timeLabel,
-                  style: TextStyle(
-                      color: _brown.withValues(alpha: 0.4), fontSize: 12),
-                ),
-              ],
+            UserAvatar(
+              userId: comment['authorId'] as String?,
+              fallbackName: authorName,
+              radius: isReply ? 12 : 14,
             ),
-            if (isReply && replyToName != null && replyToName.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 2),
-                child: Text(
-                  '↳ $replyToName',
-                  style: const TextStyle(fontSize: 12, color: _muted),
-                ),
-              ),
-            const SizedBox(height: 4),
-            Text(comment['content'] ?? '',
-                style: const TextStyle(color: _brown, height: 1.35)),
-            if (user != null)
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton(
-                  style: TextButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                    minimumSize: const Size(0, 28),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        authorName,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, color: _brown),
+                      ),
+                      Text(
+                        timeLabel,
+                        style: TextStyle(
+                            color: _brown.withValues(alpha: 0.4),
+                            fontSize: 12),
+                      ),
+                    ],
                   ),
-                  onPressed: () => _startReply(
-                    commentId: doc.id,
-                    name: authorName,
-                    authorId: comment['authorId'] ?? '',
-                    rootId: rootId,
-                  ),
-                  child: const Text('Reply',
-                      style: TextStyle(
-                          fontSize: 13,
-                          color: _orange,
-                          fontWeight: FontWeight.w600)),
-                ),
+                  if (isReply &&
+                      replyToName != null &&
+                      replyToName.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        '↳ $replyToName',
+                        style:
+                            const TextStyle(fontSize: 12, color: _muted),
+                      ),
+                    ),
+                  const SizedBox(height: 4),
+                  Text(comment['content'] ?? '',
+                      style: const TextStyle(color: _brown, height: 1.35)),
+                  if (user != null)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton(
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: const Size(0, 28),
+                          tapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        onPressed: () => _startReply(
+                          commentId: doc.id,
+                          name: authorName,
+                          authorId: comment['authorId'] ?? '',
+                          rootId: rootId,
+                        ),
+                        child: const Text('Reply',
+                            style: TextStyle(
+                                fontSize: 13,
+                                color: _orange,
+                                fontWeight: FontWeight.w600)),
+                      ),
+                    ),
+                ],
               ),
+            ),
           ],
         ),
       ),
