@@ -33,6 +33,7 @@ dependencies:
   english_words: ^4.0.0
   pedometer: ^4.1.1
   file_picker: ^5.5.0   
+  url_launcher: ^6.3.1
 
 dev_dependencies:
   flutter_test:
@@ -52,6 +53,7 @@ flutter:
     - assets/images/icons/
     - assets/images/default_profile.png
     - assets/config/cities.json
+    - assets/config/food_details.json
     - assets/images/forum_background.png
     - assets/images/food/
     - assets/images/tape.png

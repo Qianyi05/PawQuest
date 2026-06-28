@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import '../providers/step_provider.dart';
+import 'food_detail_screen.dart';
 
 
 //
@@ -121,10 +122,18 @@ class FoodPage extends StatelessWidget {
         final city = item["city"]!;
         final angle = (Random().nextInt(18) - 9) * pi / 180; // -9°~+9°
 
-        return FoodSticker(
-          filename: img,
-          cityName: city,
-          angle: angle,
+        return GestureDetector(
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => FoodDetailScreen(filename: img, city: city),
+            ),
+          ),
+          child: FoodSticker(
+            filename: img,
+            cityName: city,
+            angle: angle,
+          ),
         );
       },
     );

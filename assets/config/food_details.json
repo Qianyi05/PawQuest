@@ -1,0 +1,114 @@
+{
+  "Como": {
+    "dish": "Spritz",
+    "description": "The spritz — prosecco, a bitter orange liqueur such as Aperol, and a splash of soda over ice — is Italy's iconic aperitivo. On the shores of Lake Como it is sipped slowly at golden hour, with olives and chips on the side.",
+    "restaurant": "Lakefront aperitivo bars",
+    "address": "Piazza Cavour & the lakefront, Como",
+    "mapsQuery": "aperitivo bar Piazza Cavour Como"
+  },
+  "Milan": {
+    "dish": "Scaloppina al limone",
+    "description": "Thin veal escalopes pan-fried and finished in a bright lemon-butter sauce — a light, elegant Milanese classic served with a wedge of lemon.",
+    "restaurant": "Trattoria Milanese",
+    "address": "Via Santa Marta 11, Milan",
+    "mapsQuery": "Trattoria Milanese Via Santa Marta Milano"
+  },
+  "Turin": {
+    "dish": "Focaccia",
+    "description": "A golden, dimpled flatbread brushed with olive oil and sea salt, crisp outside and soft within. Bakeries serve it warm by the slice all day long.",
+    "restaurant": "Historic bakeries & focaccerie",
+    "address": "Quadrilatero Romano, Turin",
+    "mapsQuery": "focaccia bakery Quadrilatero Romano Torino"
+  },
+  "Genova": {
+    "dish": "Spaghetti allo scoglio",
+    "description": "Seafood spaghetti piled with mussels, clams, prawns and tomato — a taste of the Ligurian coast. Genoa's old harbour trattorias do it best, straight off the morning's catch.",
+    "restaurant": "Old-town seafood trattorias",
+    "address": "Porto Antico, Genoa",
+    "mapsQuery": "spaghetti allo scoglio Porto Antico Genova"
+  },
+  "Pisa": {
+    "dish": "Tiramisù",
+    "description": "Layers of espresso-soaked savoiardi, sweet mascarpone cream and a dusting of cocoa — Italy's most beloved dessert, perfect after a stroll past the Leaning Tower.",
+    "restaurant": "Cafés near Piazza dei Miracoli",
+    "address": "Piazza dei Miracoli area, Pisa",
+    "mapsQuery": "tiramisu caffe Pisa centro"
+  },
+  "Venice": {
+    "dish": "Fritto misto",
+    "description": "A paper cone of lightly battered, deep-fried seafood — calamari, prawns and small fish — eaten warm while wandering the canals. A staple of Venetian bacari.",
+    "restaurant": "Bacari (cicchetti bars)",
+    "address": "Rialto market area, Venice",
+    "mapsQuery": "fritto misto bacaro Rialto Venezia"
+  },
+  "Florence": {
+    "dish": "Gelato",
+    "description": "Real Italian gelato — denser and silkier than ice cream, churned fresh daily. Florence has some of Italy's oldest gelaterie; a small cup with two flavours is the move.",
+    "restaurant": "Gelateria Vivoli (est. 1930)",
+    "address": "Via dell'Isola delle Stinche 7r, Florence",
+    "mapsQuery": "Gelateria Vivoli Firenze"
+  },
+  "Bologna": {
+    "dish": "Spaghetti al ragù",
+    "description": "Bologna is the home of true ragù — a slow-cooked meat sauce. Locals serve it on fresh egg pasta rather than spaghetti, but either way it is rich, savoury and deeply comforting.",
+    "restaurant": "Osteria dell'Orsa",
+    "address": "Via Mentana 1, Bologna",
+    "mapsQuery": "Osteria dell'Orsa Bologna"
+  },
+  "SanMarino": {
+    "dish": "Caffè",
+    "description": "An Italian espresso — small, intense and finished standing at the bar. In the hilltop republic of San Marino it comes with a panoramic view over three peaks.",
+    "restaurant": "Historic-centre cafés",
+    "address": "Città di San Marino",
+    "mapsQuery": "caffe bar centro storico San Marino"
+  },
+  "Rome": {
+    "dish": "Carbonara",
+    "description": "Rome's signature pasta: eggs, pecorino romano, crispy guanciale and plenty of black pepper tossed into a silky sauce — never cream. Bold, salty and unforgettable.",
+    "restaurant": "Da Enzo al 29",
+    "address": "Via dei Vascellari 29, Trastevere, Rome",
+    "mapsQuery": "Da Enzo al 29 Trastevere Roma"
+  },
+  "Abruzzo": {
+    "dish": "Vino bianco",
+    "description": "Abruzzo's crisp whites — Trebbiano and the aromatic Pecorino grape — are mountain-and-sea wines, fresh and easy-drinking. Best enjoyed at a local enoteca with some cheese.",
+    "restaurant": "Local enoteche (wine bars)",
+    "address": "Abruzzo wine country",
+    "mapsQuery": "enoteca vino bianco Abruzzo"
+  },
+  "Naples": {
+    "dish": "Pizza",
+    "description": "The birthplace of pizza. A true Neapolitan pie has a puffy, charred cornicione and a soft, foldable centre — just tomato, mozzarella and basil, baked for seconds in a blazing wood oven.",
+    "restaurant": "L'Antica Pizzeria da Michele",
+    "address": "Via Cesare Sersale 1, Naples",
+    "mapsQuery": "L'Antica Pizzeria da Michele Napoli"
+  },
+  "Caserta": {
+    "dish": "Pizza & mozzarella di bufala",
+    "description": "Caserta's plains produce Italy's finest mozzarella di bufala — milky, delicate and incredibly fresh. It crowns the pizzas of one of the world's most awarded pizzerias here.",
+    "restaurant": "I Masanielli – Francesco Martucci",
+    "address": "Viale Giulio Douhet 11, Caserta",
+    "mapsQuery": "I Masanielli Francesco Martucci Caserta"
+  },
+  "AmalfiCoast": {
+    "dish": "Gnocchi alla Sorrentina",
+    "description": "Soft potato gnocchi baked in tomato sauce with fior di latte and basil until bubbling and stringy — a coast comfort dish, served in its own little terracotta pot.",
+    "restaurant": "Sorrento-coast trattorias",
+    "address": "Sorrento / Amalfi Coast",
+    "mapsQuery": "gnocchi alla sorrentina Sorrento"
+  },
+  "Sicily": {
+    "dish": "Frittura di gamberi",
+    "description": "Sweet red prawns and calamari flash-fried until crisp — Sicilian market-and-street seafood at its simplest, with just a squeeze of lemon.",
+    "restaurant": "Market seafood stalls & trattorias",
+    "address": "Catania / Palermo fish markets",
+    "mapsQuery": "frittura di pesce gamberi Sicilia mercato"
+  },
+  "Sardegna": {
+    "dish": "Ichnusa (Sardinian beer)",
+    "description": "Ichnusa is Sardinia's own beer, brewed on the island since 1912 and named after its ancient Greek name. Crisp and golden, it is the local way to toast by the sea.",
+    "restaurant": "Seaside bars & birrerie",
+    "address": "Cagliari & the Sardinian coast",
+    "mapsQuery": "Ichnusa beer bar Cagliari Sardegna"
+  }
+}
