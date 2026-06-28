@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'main_screen.dart'; // User successfully login and redirected to the profile
+import 'main_screen.dart';
 import 'register_screen.dart';
-
-
-
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,11 +11,22 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  static const Color _cream = Color(0xFFFFF6EB);
+  static const Color _orange = Color(0xFFF77F42);
+  static const Color _brown = Color(0xFF6B4F3A);
+
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-
   final FirebaseAuth _auth = FirebaseAuth.instance;
   bool _isLoading = false;
+  bool _obscure = true;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   Future<void> _login() async {
     setState(() => _isLoading = true);
@@ -27,119 +35,146 @@ class _LoginScreenState extends State<LoginScreen> {
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const  MainScreen()),
-        );
-      }
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const MainScreen()),
+      );
     } on FirebaseAuthException catch (e) {
       _showError(e.message ?? 'Login failed');
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
-
   void _showError(String message) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
-Widget build(BuildContext context) {
-  return Scaffold(
-    
-
-    body: Stack(
-      children: [
-        // 1️⃣  背景图
-        Positioned.fill(
-          child: Image.asset(
-            'assets/images/login.jpeg', // 你的背景
-            fit: BoxFit.cover,
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: _cream,
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset('assets/images/login.jpeg', fit: BoxFit.cover),
           ),
-        ),
-
-        // 2️⃣  半透明白色遮罩（确保输入框可见）
-        Positioned.fill(
-          child: Container(
-            color: Colors.white.withValues(alpha: 0.4),
+          Positioned.fill(
+            child: Container(color: Colors.white.withValues(alpha: 0.2)),
           ),
-        ),
-
-        // 3️⃣  
-        Align(
-  alignment: Alignment.bottomCenter,
-  child: Padding(
-    padding: const EdgeInsets.only(bottom: 100), // 控制整体高度
-    child: Column(
-      mainAxisSize: MainAxisSize.min,   // ⭐⭐ 关键：让 Column 不占满屏
-      children: [
-        
-        const SizedBox(height: 20),
-
-        // Email
-        TextField(
-          controller: _emailController,
-          decoration: const InputDecoration(
-            labelText: 'Email',
-            filled: true,
-            fillColor: Colors.white,
-            border: OutlineInputBorder(),
-          ),
-        ),
-        const SizedBox(height: 8),
-
-        // Password
-        TextField(
-          controller: _passwordController,
-          decoration: const InputDecoration(
-            labelText: 'Password',
-            filled: true,
-            fillColor: Colors.white,
-            border: OutlineInputBorder(),
-          ),
-          obscureText: true,
-        ),
-        const SizedBox(height: 16),
-
-        // Login button
-        _isLoading
-            ? const CircularProgressIndicator()
-            : ElevatedButton(
-                onPressed: _login,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFEEBF6D),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 40, vertical: 14),
-                  shape: const StadiumBorder(),
+          SafeArea(
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(28, 0, 28, 56),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _field(
+                      controller: _emailController,
+                      hint: 'Email',
+                      icon: Icons.email_rounded,
+                      keyboard: TextInputType.emailAddress,
+                    ),
+                    const SizedBox(height: 14),
+                    _field(
+                      controller: _passwordController,
+                      hint: 'Password',
+                      icon: Icons.lock_rounded,
+                      obscure: _obscure,
+                      suffix: IconButton(
+                        icon: Icon(
+                          _obscure
+                              ? Icons.visibility_off_rounded
+                              : Icons.visibility_rounded,
+                          color: _brown.withValues(alpha: 0.5),
+                          size: 20,
+                        ),
+                        onPressed: () => setState(() => _obscure = !_obscure),
+                      ),
+                    ),
+                    const SizedBox(height: 22),
+                    _primaryButton('Login', _login),
+                    const SizedBox(height: 6),
+                    TextButton(
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const RegisterScreen()),
+                      ),
+                      child: const Text(
+                        'Don’t have an account? Register',
+                        style: TextStyle(
+                            color: _brown, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ],
                 ),
-                child: const Text('Login'),
               ),
-        const SizedBox(height: 12),
-
-        TextButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const RegisterScreen()),
-            );
-          },
-          child: const Text(
-            'Don’t have an account? Register',
-            style: TextStyle(color: Colors.brown),
+            ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _field({
+    required TextEditingController controller,
+    required String hint,
+    required IconData icon,
+    bool obscure = false,
+    Widget? suffix,
+    TextInputType? keyboard,
+  }) {
+    return TextField(
+      controller: controller,
+      obscureText: obscure,
+      keyboardType: keyboard,
+      style: const TextStyle(color: _brown),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: TextStyle(color: _brown.withValues(alpha: 0.4)),
+        prefixIcon: Icon(icon, color: _orange),
+        suffixIcon: suffix,
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
         ),
-      ],
-    ),
-  ),
-),
+      ),
+    );
+  }
 
-      ],
-    ),
-  );
-}
-
+  Widget _primaryButton(String label, VoidCallback onTap) {
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: ElevatedButton(
+        onPressed: _isLoading ? null : onTap,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: _orange,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18)),
+          textStyle:
+              const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        child: _isLoading
+            ? const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2.5, color: Colors.white),
+              )
+            : Text(label),
+      ),
+    );
+  }
 }
