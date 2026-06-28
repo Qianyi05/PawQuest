@@ -9,6 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 Widget roundedButton({
   required String label,
   required VoidCallback onPressed,
+  IconData? icon,
 }) {
   return TextButton(
     onPressed: onPressed,
@@ -26,13 +27,22 @@ Widget roundedButton({
           ),
         ],
       ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: Color(0xFF6C4A2F),
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 18, color: const Color(0xFF6C4A2F)),
+            const SizedBox(width: 7),
+          ],
+          Text(
+            label,
+            style: const TextStyle(
+              color: Color(0xFF6C4A2F),
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
       ),
     ),
   );
@@ -103,42 +113,67 @@ class _WorldMapScreenState extends State<WorldMapScreen> {
                           opacity: anim.value,
                           child: Center(
                             child: Container(
-                              width: 300,
-                              padding: const EdgeInsets.all(24),
+                              width: 320,
+                              padding:
+                                  const EdgeInsets.fromLTRB(28, 26, 28, 24),
                               decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.95),
+                                color: Colors.white,
                                 borderRadius: BorderRadius.circular(32),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Colors.black26,
+                                    blurRadius: 24,
+                                    offset: Offset(0, 10),
+                                  ),
+                                ],
                               ),
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Text(
-                                    "You have unlocked the city:",
-                                    style: GoogleFonts.baloo2(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.brown,
-                                    ),
-                                    textAlign: TextAlign.center,
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.celebration_rounded,
+                                          size: 18, color: Color(0xFFF77F42)),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        "NEW CITY UNLOCKED",
+                                        style: GoogleFonts.baloo2(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w700,
+                                          color: const Color(0xFFF77F42),
+                                          letterSpacing: 1.2,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  const SizedBox(height: 6),
+                                  const SizedBox(height: 10),
                                   Text(
                                     city['name'],
+                                    textAlign: TextAlign.center,
                                     style: GoogleFonts.baloo2(
-                                      fontSize: 28,
+                                      fontSize: 30,
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.brown,
+                                      color: const Color(0xFF6C4A2F),
                                     ),
                                   ),
-                                  const SizedBox(height: 20),
+                                  const SizedBox(height: 18),
 
                                   // 🔥 勋章图案
-                                  Image.asset(
-                                    'assets/images/badges/${city['badge']}',
-                                    width: 200,
+                                  Container(
+                                    padding: const EdgeInsets.all(14),
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: const Color(0xFFF8D66D)
+                                          .withValues(alpha: 0.25),
+                                    ),
+                                    child: Image.asset(
+                                      'assets/images/badges/${city['badge']}',
+                                      width: 170,
+                                    ),
                                   ),
 
-                                  const SizedBox(height: 20),
+                                  const SizedBox(height: 22),
 
                                   roundedButton(
                                     label: 'View details',
@@ -184,6 +219,7 @@ class _WorldMapScreenState extends State<WorldMapScreen> {
               children: [
                 roundedButton(
                   label: 'Home',
+                  icon: Icons.home_rounded,
                   onPressed: () {
                     Navigator.pushAndRemoveUntil(
                       context,
@@ -196,6 +232,7 @@ class _WorldMapScreenState extends State<WorldMapScreen> {
                 ),
                 roundedButton(
                   label: 'Food Journey',
+                  icon: Icons.restaurant_rounded,
                   onPressed: () {
                     Navigator.pushAndRemoveUntil(
                         context,
