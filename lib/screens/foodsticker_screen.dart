@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import '../providers/step_provider.dart';
+import '../utils/unlock.dart';
 import 'food_detail_screen.dart';
 
 
@@ -165,7 +166,8 @@ class FoodStickerScreen extends StatelessWidget {
       final img = data["food"];
       final city = data["name"];
 
-      if (need != null && img != null && city != null && steps >= need) {
+      if (need is num && img != null && city != null &&
+          Unlock.isUnlocked(steps, need.toInt())) {
         foods.add({"file": img, "city": city});
       }
     }

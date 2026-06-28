@@ -150,8 +150,8 @@ class _PostCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isAuthor = currentUid != null && currentUid == postData['authorId'];
-    final liked = forum.isLikedBy(postData, currentUid);
-    final likes = forum.likeCount(postData);
+    final liked = ForumService.isLikedBy(postData, currentUid);
+    final likes = ForumService.likeCount(postData);
     final ts = postData['timestamp'];
     final timeLabel = ts is Timestamp
         ? ts.toDate().toString().substring(0, 16)

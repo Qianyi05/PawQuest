@@ -157,9 +157,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                             final data =
                                 snap.data?.data() as Map<String, dynamic>?;
                             final liked = data != null &&
-                                _forum.isLikedBy(data, user?.uid);
+                                ForumService.isLikedBy(data, user?.uid);
                             final likes =
-                                data != null ? _forum.likeCount(data) : 0;
+                                data != null ? ForumService.likeCount(data) : 0;
                             return Row(
                               children: [
                                 IconButton(

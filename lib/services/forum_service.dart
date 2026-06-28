@@ -15,14 +15,14 @@ class ForumService {
   // ---------------------------------------------------------------- helpers
 
   /// Whether [postData] is currently liked by the signed-in user.
-  bool isLikedBy(Map<String, dynamic> postData, String? uid) {
+  static bool isLikedBy(Map<String, dynamic> postData, String? uid) {
     if (uid == null) return false;
     final likedBy = List<String>.from(postData['likedBy'] ?? const []);
     return likedBy.contains(uid);
   }
 
   /// Reads the like count defensively (old posts may not have the field yet).
-  int likeCount(Map<String, dynamic> postData) {
+  static int likeCount(Map<String, dynamic> postData) {
     final raw = postData['likes'];
     if (raw is int) return raw;
     return List<String>.from(postData['likedBy'] ?? const []).length;
