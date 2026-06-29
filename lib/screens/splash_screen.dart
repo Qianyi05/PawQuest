@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
 import 'register_screen.dart';
+import 'package:provider/provider.dart';
+import 'package:pawquest/providers/theme_provider.dart';
+import 'package:pawquest/theme/app_palette.dart';
 
 class SplashScreen extends StatefulWidget {
   final VoidCallback? onToggleTheme; // 可选：从上层传入主题切换
@@ -15,6 +18,7 @@ class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeIn;
+  AppPalette p = AppPalette.all.first;
 
   @override
   void initState() {
@@ -41,6 +45,7 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    p = context.watch<ThemeProvider>().palette;
     return Scaffold(
       // 给深色背景，避免看起来像“白屏”
       backgroundColor: Colors.black,
@@ -88,8 +93,8 @@ class _SplashScreenState extends State<SplashScreen>
       child: ElevatedButton(
         onPressed: onTap,
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFEEBF6D),
-          foregroundColor: const Color(0xFF6C4A2F),
+          backgroundColor: p.accent,
+          foregroundColor: p.text,
           shape: const StadiumBorder(),
           elevation: 3,
           shadowColor: Colors.black26,

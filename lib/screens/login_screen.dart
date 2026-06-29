@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'main_screen.dart';
 import 'register_screen.dart';
+import 'package:provider/provider.dart';
+import 'package:pawquest/providers/theme_provider.dart';
+import 'package:pawquest/theme/app_palette.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -11,9 +14,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  static const Color _cream = Color(0xFFFFF6EB);
-  static const Color _orange = Color(0xFFF77F42);
-  static const Color _brown = Color(0xFF6B4F3A);
+  AppPalette p = AppPalette.all.first;
 
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -55,8 +56,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    p = context.watch<ThemeProvider>().palette;
     return Scaffold(
-      backgroundColor: _cream,
+      backgroundColor: p.background,
       body: Stack(
         children: [
           Positioned.fill(
@@ -90,7 +92,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           _obscure
                               ? Icons.visibility_off_rounded
                               : Icons.visibility_rounded,
-                          color: _brown.withValues(alpha: 0.5),
+                          color: p.text.withValues(alpha: 0.5),
                           size: 20,
                         ),
                         onPressed: () => setState(() => _obscure = !_obscure),
@@ -105,10 +107,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         MaterialPageRoute(
                             builder: (_) => const RegisterScreen()),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Don’t have an account? Register',
                         style: TextStyle(
-                            color: _brown, fontWeight: FontWeight.w600),
+                            color: p.text, fontWeight: FontWeight.w600),
                       ),
                     ),
                   ],
@@ -133,11 +135,11 @@ class _LoginScreenState extends State<LoginScreen> {
       controller: controller,
       obscureText: obscure,
       keyboardType: keyboard,
-      style: const TextStyle(color: _brown),
+      style: TextStyle(color: p.text),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(color: _brown.withValues(alpha: 0.4)),
-        prefixIcon: Icon(icon, color: _orange),
+        hintStyle: TextStyle(color: p.text.withValues(alpha: 0.4)),
+        prefixIcon: Icon(icon, color: p.primary),
         suffixIcon: suffix,
         filled: true,
         fillColor: Colors.white,
@@ -158,7 +160,7 @@ class _LoginScreenState extends State<LoginScreen> {
       child: ElevatedButton(
         onPressed: _isLoading ? null : onTap,
         style: ElevatedButton.styleFrom(
-          backgroundColor: _orange,
+          backgroundColor: p.primary,
           foregroundColor: Colors.white,
           elevation: 0,
           shape: RoundedRectangleBorder(

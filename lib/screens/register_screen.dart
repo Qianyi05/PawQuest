@@ -4,6 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'choose_cat_screen.dart';
 import '../providers/step_provider.dart';
+import '../providers/theme_provider.dart';
+import '../theme/app_palette.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -13,9 +15,7 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  static const Color _cream = Color(0xFFFFF6EB);
-  static const Color _orange = Color(0xFFF77F42);
-  static const Color _brown = Color(0xFF6B4F3A);
+  AppPalette p = AppPalette.all.first;
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final _emailController = TextEditingController();
@@ -75,8 +75,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    p = context.watch<ThemeProvider>().palette;
     return Scaffold(
-      backgroundColor: _cream,
+      backgroundColor: p.background,
       body: Stack(
         children: [
           Positioned.fill(
@@ -110,7 +111,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           _obscure
                               ? Icons.visibility_off_rounded
                               : Icons.visibility_rounded,
-                          color: _brown.withValues(alpha: 0.5),
+                          color: p.text.withValues(alpha: 0.5),
                           size: 20,
                         ),
                         onPressed: () => setState(() => _obscure = !_obscure),
@@ -121,10 +122,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     const SizedBox(height: 6),
                     TextButton(
                       onPressed: () => Navigator.pop(context),
-                      child: const Text(
+                      child: Text(
                         'Already have an account? Login',
                         style: TextStyle(
-                            color: _brown, fontWeight: FontWeight.w600),
+                            color: p.text, fontWeight: FontWeight.w600),
                       ),
                     ),
                   ],
@@ -149,11 +150,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       controller: controller,
       obscureText: obscure,
       keyboardType: keyboard,
-      style: const TextStyle(color: _brown),
+      style: TextStyle(color: p.text),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(color: _brown.withValues(alpha: 0.4)),
-        prefixIcon: Icon(icon, color: _orange),
+        hintStyle: TextStyle(color: p.text.withValues(alpha: 0.4)),
+        prefixIcon: Icon(icon, color: p.primary),
         suffixIcon: suffix,
         filled: true,
         fillColor: Colors.white,
@@ -174,7 +175,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       child: ElevatedButton(
         onPressed: _isLoading ? null : onTap,
         style: ElevatedButton.styleFrom(
-          backgroundColor: _orange,
+          backgroundColor: p.primary,
           foregroundColor: Colors.white,
           elevation: 0,
           shape: RoundedRectangleBorder(
