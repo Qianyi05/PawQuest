@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:pawquest/services/forum_service.dart';
+import 'package:provider/provider.dart';
+import 'package:pawquest/providers/theme_provider.dart';
+import 'package:pawquest/theme/app_palette.dart';
 import '../widgets/user_avatar.dart';
 
 class PostDetailScreen extends StatefulWidget {
@@ -25,11 +28,7 @@ class PostDetailScreen extends StatefulWidget {
 }
 
 class _PostDetailScreenState extends State<PostDetailScreen> {
-  static const Color _cream = Color(0xFFFFF6EB);
-  static const Color _yellow = Color(0xFFF8D66D);
-  static const Color _orange = Color(0xFFF77F42);
-  static const Color _brown = Color(0xFF6B4F3A);
-  static const Color _muted = Color(0xFF9C7B53);
+  AppPalette p = AppPalette.all.first;
 
   final TextEditingController _commentController = TextEditingController();
   final ForumService _forum = ForumService();
@@ -113,14 +112,15 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    p = context.watch<ThemeProvider>().palette;
     final user = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
-      backgroundColor: _cream,
+      backgroundColor: p.background,
       appBar: AppBar(
         title: const Text('Post Detail',
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        backgroundColor: _yellow,
+        backgroundColor: p.accent,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
@@ -138,8 +138,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                   .snapshots(),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
-                  return const Center(
-                      child: CircularProgressIndicator(color: _orange));
+                  return Center(
+                      child: CircularProgressIndicator(color: p.primary));
                 }
 
                 final docs = snapshot.data!.docs;
@@ -149,15 +149,15 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(Icons.chat_bubble_outline_rounded,
-                            size: 44, color: _muted.withValues(alpha: 0.5)),
+                            size: 44, color: p.textMuted.withValues(alpha: 0.5)),
                         const SizedBox(height: 8),
                         Text('No comments yet',
                             style: TextStyle(
-                                color: _brown.withValues(alpha: 0.7))),
+                                color: p.text.withValues(alpha: 0.7))),
                         Text('Be the first to say something!',
                             style: TextStyle(
                                 fontSize: 12,
-                                color: _brown.withValues(alpha: 0.5))),
+                                color: p.text.withValues(alpha: 0.5))),
                       ],
                     ),
                   );
@@ -218,24 +218,24 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           if (_replyingToId != null)
             Container(
               width: double.infinity,
-              color: _yellow.withValues(alpha: 0.3),
+              color: p.accent.withValues(alpha: 0.3),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 children: [
-                  const Icon(Icons.reply_rounded, size: 16, color: _orange),
+                  Icon(Icons.reply_rounded, size: 16, color: p.primary),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
                       'Replying to ${_replyingToName ?? ''}',
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 13,
-                          color: _brown,
+                          color: p.text,
                           fontWeight: FontWeight.w600),
                     ),
                   ),
                   GestureDetector(
                     onTap: _cancelReply,
-                    child: const Icon(Icons.close, size: 18, color: _brown),
+                    child: Icon(Icons.close, size: 18, color: p.text),
                   ),
                 ],
               ),
@@ -273,23 +273,23 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               Expanded(
                 child: Text(
                   widget.authorName,
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: _brown,
+                      color: p.text,
                       fontSize: 15),
                 ),
               ),
               Text(
                 widget.timestamp.toDate().toString().substring(0, 16),
                 style: TextStyle(
-                    color: _brown.withValues(alpha: 0.45), fontSize: 12),
+                    color: p.text.withValues(alpha: 0.45), fontSize: 12),
               ),
             ],
           ),
           const SizedBox(height: 12),
           Text(widget.content,
-              style: const TextStyle(
-                  color: _brown, fontSize: 15, height: 1.4)),
+              style: TextStyle(
+                  color: p.text, fontSize: 15, height: 1.4)),
           const SizedBox(height: 12),
           StreamBuilder<DocumentSnapshot>(
             stream: FirebaseFirestore.instance
@@ -310,7 +310,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                     constraints: const BoxConstraints(),
                     icon: Icon(
                       liked ? Icons.favorite : Icons.favorite_border,
-                      color: liked ? Colors.redAccent : _muted,
+                      color: liked ? Colors.redAccent : p.textMuted,
                       size: 22,
                     ),
                     onPressed: user == null
@@ -319,8 +319,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                   ),
                   const SizedBox(width: 6),
                   Text('$likes',
-                      style: const TextStyle(
-                          color: _brown, fontWeight: FontWeight.w600)),
+                      style: TextStyle(
+                          color: p.text, fontWeight: FontWeight.w600)),
                 ],
               );
             },
@@ -341,15 +341,15 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
             Expanded(
               child: TextField(
                 controller: _commentController,
-                style: const TextStyle(color: _brown),
+                style: TextStyle(color: p.text),
                 decoration: InputDecoration(
                   hintText: _replyingToId == null
                       ? 'Start a conversation...'
                       : 'Write a reply...',
                   hintStyle:
-                      TextStyle(color: _brown.withValues(alpha: 0.4)),
+                      TextStyle(color: p.text.withValues(alpha: 0.4)),
                   filled: true,
-                  fillColor: _cream,
+                  fillColor: p.background,
                   isDense: true,
                   contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16, vertical: 12),
@@ -363,7 +363,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
             ),
             const SizedBox(width: 8),
             Material(
-              color: _orange,
+              color: p.primary,
               shape: const CircleBorder(),
               child: InkWell(
                 customBorder: const CircleBorder(),
@@ -425,13 +425,13 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                     children: [
                       Text(
                         authorName,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, color: _brown),
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, color: p.text),
                       ),
                       Text(
                         timeLabel,
                         style: TextStyle(
-                            color: _brown.withValues(alpha: 0.4),
+                            color: p.text.withValues(alpha: 0.4),
                             fontSize: 12),
                       ),
                     ],
@@ -444,12 +444,12 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                       child: Text(
                         '↳ $replyToName',
                         style:
-                            const TextStyle(fontSize: 12, color: _muted),
+                            TextStyle(fontSize: 12, color: p.textMuted),
                       ),
                     ),
                   const SizedBox(height: 4),
                   Text(comment['content'] ?? '',
-                      style: const TextStyle(color: _brown, height: 1.35)),
+                      style: TextStyle(color: p.text, height: 1.35)),
                   if (user != null)
                     Align(
                       alignment: Alignment.centerLeft,
@@ -466,10 +466,10 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                           authorId: comment['authorId'] ?? '',
                           rootId: rootId,
                         ),
-                        child: const Text('Reply',
+                        child: Text('Reply',
                             style: TextStyle(
                                 fontSize: 13,
-                                color: _orange,
+                                color: p.primary,
                                 fontWeight: FontWeight.w600)),
                       ),
                     ),

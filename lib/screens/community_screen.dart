@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
 import 'package:pawquest/services/forum_service.dart';
+import 'package:pawquest/providers/theme_provider.dart';
+import 'package:pawquest/theme/app_palette.dart';
 import 'post_detail_screen.dart';
 import '../widgets/user_avatar.dart';
-
-const Color _cream = Color(0xFFFFF6EB);
-const Color _orange = Color(0xFFF77F42);
-const Color _brown = Color(0xFF6B4F3A);
 
 class CommunityScreen extends StatelessWidget {
   CommunityScreen({super.key});
@@ -16,10 +15,11 @@ class CommunityScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.watch<ThemeProvider>().palette;
     final currentUser = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
-      backgroundColor: _cream,
+      backgroundColor: p.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -38,8 +38,8 @@ class CommunityScreen extends StatelessWidget {
                     .snapshots(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                        child: CircularProgressIndicator(color: _orange));
+                    return Center(
+                        child: CircularProgressIndicator(color: p.primary));
                   }
 
                   final posts = snapshot.data?.docs ?? [];
@@ -50,21 +50,19 @@ class CommunityScreen extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.forum_outlined,
-                              size: 48,
-                              color: _brown.withValues(alpha: 0.4)),
+                              size: 48, color: p.text.withValues(alpha: 0.4)),
                           const SizedBox(height: 10),
-                          const Text(
+                          Text(
                             'No posts yet',
                             style: TextStyle(
-                                color: _brown,
+                                color: p.text,
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold),
                           ),
                           Text(
                             'Be the first to share something!',
                             style: TextStyle(
-                                color: _brown.withValues(alpha: 0.6),
-                                fontSize: 13),
+                                color: p.textMuted, fontSize: 13),
                           ),
                         ],
                       ),
@@ -82,6 +80,7 @@ class CommunityScreen extends StatelessWidget {
                         postData: postData,
                         currentUid: currentUser?.uid,
                         forum: _forum,
+                        p: p,
                       );
                     },
                   );
@@ -92,20 +91,18 @@ class CommunityScreen extends StatelessWidget {
         ),
       ),
       floatingActionButton: Padding(
-        // MainScreen uses extendBody:true, so lift the FAB above the floating
-        // bottom bar.
         padding: const EdgeInsets.only(bottom: 80),
         child: FloatingActionButton(
-          backgroundColor: _orange,
+          backgroundColor: p.primary,
           elevation: 3,
           child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
-          onPressed: () => _showPostDialog(context),
+          onPressed: () => _showPostDialog(context, p),
         ),
       ),
     );
   }
 
-  void _showPostDialog(BuildContext context) {
+  void _showPostDialog(BuildContext context, AppPalette p) {
     final controller = TextEditingController();
     final user = FirebaseAuth.instance.currentUser;
 
@@ -113,20 +110,20 @@ class CommunityScreen extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(22)),
-        title: const Text('New Post',
-            style: TextStyle(color: _brown, fontWeight: FontWeight.bold)),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+        title: Text('New Post',
+            style: TextStyle(color: p.text, fontWeight: FontWeight.bold)),
         content: TextField(
           controller: controller,
           maxLines: 4,
           minLines: 2,
-          style: const TextStyle(color: _brown),
+          style: TextStyle(color: p.text),
           decoration: InputDecoration(
             hintText: 'Share something...',
-            hintStyle: TextStyle(color: _brown.withValues(alpha: 0.4)),
+            hintStyle: TextStyle(color: p.text.withValues(alpha: 0.4)),
             filled: true,
-            fillColor: _cream,
+            fillColor: p.background,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
               borderSide: BorderSide.none,
@@ -136,12 +133,11 @@ class CommunityScreen extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel',
-                style: TextStyle(color: _brown.withValues(alpha: 0.7))),
+            child: Text('Cancel', style: TextStyle(color: p.textMuted)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: _orange,
+              backgroundColor: p.primary,
               foregroundColor: Colors.white,
               elevation: 0,
               shape: RoundedRectangleBorder(
@@ -176,12 +172,14 @@ class _PostCard extends StatelessWidget {
     required this.postData,
     required this.currentUid,
     required this.forum,
+    required this.p,
   });
 
   final String postId;
   final Map<String, dynamic> postData;
   final String? currentUid;
   final ForumService forum;
+  final AppPalette p;
 
   @override
   Widget build(BuildContext context) {
@@ -196,7 +194,7 @@ class _PostCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: p.surface,
         borderRadius: BorderRadius.circular(18),
         boxShadow: const [
           BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 3)),
@@ -235,9 +233,9 @@ class _PostCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         author,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 15,
-                          color: _brown,
+                          color: p.text,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -246,15 +244,14 @@ class _PostCard extends StatelessWidget {
                       timeLabel,
                       style: TextStyle(
                           fontSize: 12,
-                          color: _brown.withValues(alpha: 0.45)),
+                          color: p.text.withValues(alpha: 0.45)),
                     ),
                   ],
                 ),
                 const SizedBox(height: 10),
                 Text(
                   postData['content'] ?? '',
-                  style: const TextStyle(
-                      fontSize: 15, color: _brown, height: 1.35),
+                  style: TextStyle(fontSize: 15, color: p.text, height: 1.35),
                 ),
                 const SizedBox(height: 10),
                 Row(
@@ -274,15 +271,15 @@ class _PostCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 4),
                     Text('$likes',
-                        style: const TextStyle(fontSize: 13, color: _brown)),
+                        style: TextStyle(fontSize: 13, color: p.text)),
                     const SizedBox(width: 16),
                     Icon(Icons.mode_comment_outlined,
-                        size: 18, color: _brown.withValues(alpha: 0.5)),
+                        size: 18, color: p.text.withValues(alpha: 0.5)),
                     const SizedBox(width: 4),
                     Text('Reply',
                         style: TextStyle(
                             fontSize: 13,
-                            color: _brown.withValues(alpha: 0.55))),
+                            color: p.text.withValues(alpha: 0.55))),
                   ],
                 ),
               ],
