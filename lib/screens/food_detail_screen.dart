@@ -2,6 +2,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:url_launcher/url_launcher.dart';
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
+import '../theme/app_palette.dart';
 
 /// Detail page for a single unlocked food. Reads the curated entry from
 /// assets/config/food_details.json (keyed by city name) and offers a button
@@ -55,13 +58,13 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const brown = Color(0xFF6B4F3A);
+    final p = context.watch<ThemeProvider>().palette;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFDF6E3),
+      backgroundColor: p.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF8D66D),
-        foregroundColor: brown,
+        backgroundColor: p.accent,
+        foregroundColor: p.text,
         elevation: 0,
         title: Text(widget.city,
             style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -109,10 +112,10 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                 // Dish name + city
                 Text(
                   detail?['dish'] ?? widget.city,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.bold,
-                    color: brown,
+                    color: p.text,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -139,12 +142,12 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
 
                 // "Where to try it" card
                 if (detail != null) ...[
-                  const Text(
+                  Text(
                     'Where to try it',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: brown,
+                      color: p.text,
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -160,16 +163,16 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.restaurant,
-                                size: 20, color: brown),
+                            Icon(Icons.restaurant,
+                                size: 20, color: p.text),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 detail['restaurant'] ?? '',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w700,
-                                  color: brown,
+                                  color: p.text,
                                 ),
                               ),
                             ),
@@ -191,7 +194,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                           width: double.infinity,
                           child: ElevatedButton.icon(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF4EAB90),
+                              backgroundColor: p.primary,
                               foregroundColor: Colors.white,
                               padding:
                                   const EdgeInsets.symmetric(vertical: 12),

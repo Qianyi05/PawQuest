@@ -9,6 +9,8 @@ import 'package:provider/provider.dart';
 import '../providers/step_provider.dart';
 import '../utils/unlock.dart';
 import 'food_detail_screen.dart';
+import '../providers/theme_provider.dart';
+import '../theme/app_palette.dart';
 
 
 //
@@ -30,6 +32,7 @@ class FoodSticker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.watch<ThemeProvider>().palette;
     return Transform.rotate(
       angle: angle,
       child: SizedBox(
@@ -77,10 +80,10 @@ class FoodSticker extends StatelessWidget {
             // ⭐ 城市名字
             Text(
               cityName,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF6B4F3A),
+                color: p.text,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -176,6 +179,7 @@ class FoodStickerScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.watch<ThemeProvider>().palette;
     final steps = context.watch<StepProvider>().steps;
 
     return Scaffold(
@@ -226,7 +230,7 @@ class FoodStickerScreen extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 18, vertical: 8),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF8D66D),
+                        color: p.accent,
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: const [
                           BoxShadow(
@@ -238,10 +242,10 @@ class FoodStickerScreen extends StatelessWidget {
                       ),
                       child: Text(
                         "Unlocked Foods: ${foods.length}",
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
-                          color: Color(0xFF6C4A2F),
+                          color: p.text,
                         ),
                       ),
                     ),

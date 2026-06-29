@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/step_provider.dart';
+import '../providers/theme_provider.dart';
+import '../theme/app_palette.dart';
 import '../services/route_manager.dart';
 import 'city_detail_screen.dart';
 import 'main_screen.dart';
@@ -9,6 +11,7 @@ import 'package:google_fonts/google_fonts.dart';
 Widget roundedButton({
   required String label,
   required VoidCallback onPressed,
+  required AppPalette p,
   IconData? icon,
 }) {
   return TextButton(
@@ -17,7 +20,7 @@ Widget roundedButton({
     child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8D66D),
+        color: p.accent,
         borderRadius: BorderRadius.circular(30),
         boxShadow: const [
           BoxShadow(
@@ -31,13 +34,13 @@ Widget roundedButton({
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 18, color: const Color(0xFF6C4A2F)),
+            Icon(icon, size: 18, color: p.text),
             const SizedBox(width: 7),
           ],
           Text(
             label,
-            style: const TextStyle(
-              color: Color(0xFF6C4A2F),
+            style: TextStyle(
+              color: p.text,
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
@@ -75,6 +78,7 @@ class _WorldMapScreenState extends State<WorldMapScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.watch<ThemeProvider>().palette;
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
@@ -133,15 +137,15 @@ class _WorldMapScreenState extends State<WorldMapScreen> {
                                   Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      const Icon(Icons.celebration_rounded,
-                                          size: 18, color: Color(0xFFF77F42)),
+                                      Icon(Icons.celebration_rounded,
+                                          size: 18, color: p.primary),
                                       const SizedBox(width: 6),
                                       Text(
                                         "NEW CITY UNLOCKED",
                                         style: GoogleFonts.baloo2(
                                           fontSize: 13,
                                           fontWeight: FontWeight.w700,
-                                          color: const Color(0xFFF77F42),
+                                          color: p.primary,
                                           letterSpacing: 1.2,
                                         ),
                                       ),
@@ -154,7 +158,7 @@ class _WorldMapScreenState extends State<WorldMapScreen> {
                                     style: GoogleFonts.baloo2(
                                       fontSize: 30,
                                       fontWeight: FontWeight.bold,
-                                      color: const Color(0xFF6C4A2F),
+                                      color: p.text,
                                     ),
                                   ),
                                   const SizedBox(height: 18),
@@ -164,8 +168,7 @@ class _WorldMapScreenState extends State<WorldMapScreen> {
                                     padding: const EdgeInsets.all(14),
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      color: const Color(0xFFF8D66D)
-                                          .withValues(alpha: 0.25),
+                                      color: p.accent.withValues(alpha: 0.25),
                                     ),
                                     child: Image.asset(
                                       'assets/images/badges/${city['badge']}',
@@ -176,6 +179,7 @@ class _WorldMapScreenState extends State<WorldMapScreen> {
                                   const SizedBox(height: 22),
 
                                   roundedButton(
+                  p: p,
                                     label: 'View details',
                                     onPressed: () {
                                       Navigator.of(context).pop();
@@ -218,6 +222,7 @@ class _WorldMapScreenState extends State<WorldMapScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 roundedButton(
+                  p: p,
                   label: 'Home',
                   icon: Icons.home_rounded,
                   onPressed: () {
@@ -231,6 +236,7 @@ class _WorldMapScreenState extends State<WorldMapScreen> {
                   },
                 ),
                 roundedButton(
+                  p: p,
                   label: 'Food Journey',
                   icon: Icons.restaurant_rounded,
                   onPressed: () {
