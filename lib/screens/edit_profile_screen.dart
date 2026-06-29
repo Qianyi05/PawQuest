@@ -340,7 +340,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   ),
                 ),
                 if (selected)
-                  const Positioned(
+                  Positioned(
                     top: 6,
                     right: 6,
                     child: Icon(Icons.check_circle_rounded,

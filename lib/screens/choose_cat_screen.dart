@@ -156,7 +156,7 @@ class _ChooseCatScreenState extends State<ChooseCatScreen> {
                           ],
                         ),
                         if (isSelected)
-                          const Positioned(
+                          Positioned(
                             top: 6,
                             right: 6,
                             child: Icon(Icons.check_circle_rounded,
