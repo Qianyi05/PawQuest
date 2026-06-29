@@ -6,6 +6,7 @@ import 'firebase_options.dart';
 import 'package:provider/provider.dart';
 import 'package:pawquest/providers/daily_quest_provider.dart';
 import 'package:pawquest/providers/step_provider.dart';
+import 'package:pawquest/providers/theme_provider.dart';
 import 'package:pawquest/screens/main_screen.dart'; // 主界面
 import 'package:pawquest/screens/splash_screen.dart'; // 启动页
 import 'package:pawquest/screens/login_screen.dart'; // 登录页
@@ -36,6 +37,9 @@ void main() async {
         ),
         ChangeNotifierProvider<DailyQuestProvider>.value(
           value: dailyQuestProvider,
+        ),
+        ChangeNotifierProvider<ThemeProvider>(
+          create: (_) => ThemeProvider(),
         ),
       ],
       child: const PawQuestApp(),

@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'package:pawquest/providers/step_provider.dart';
+import 'package:pawquest/providers/theme_provider.dart';
+import 'package:pawquest/theme/app_palette.dart';
 import 'edit_profile_screen.dart';
 import 'notifications_screen.dart';
 import 'step_history_screen.dart';
@@ -18,12 +20,6 @@ class UserScreen extends StatefulWidget {
 }
 
 class _UserScreenState extends State<UserScreen> {
-  static const Color _cream = Color(0xFFFFF6EB);
-  static const Color _yellow = Color(0xFFF8D66D);
-  static const Color _orange = Color(0xFFF77F42);
-  static const Color _brown = Color(0xFF6B4F3A);
-  static const Color _danger = Color(0xFFE0795C);
-
   ImageProvider _avatar(String cat, String? url) {
     if (url != null && url.isNotEmpty) return NetworkImage(url);
     return AssetImage('assets/images/cats_profile/$cat.jpeg');
@@ -61,22 +57,95 @@ class _UserScreenState extends State<UserScreen> {
     );
   }
 
+  void _showThemePicker(BuildContext context, AppPalette current) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetCtx) {
+        final theme = sheetCtx.watch<ThemeProvider>();
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 10),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text('Choose a theme',
+                  style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF4A4A4A))),
+              const SizedBox(height: 8),
+              ...AppPalette.all.map((pal) {
+                final selected = pal.id == theme.currentId;
+                return ListTile(
+                  onTap: () {
+                    sheetCtx.read<ThemeProvider>().setPalette(pal.id);
+                    Navigator.pop(sheetCtx);
+                  },
+                  leading: _swatch(pal),
+                  title: Text(pal.name,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF4A4A4A))),
+                  trailing: selected
+                      ? Icon(Icons.check_circle_rounded, color: pal.primary)
+                      : null,
+                );
+              }),
+              const SizedBox(height: 12),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _swatch(AppPalette pal) {
+    Widget dot(Color c) => Container(
+          width: 16,
+          height: 16,
+          margin: const EdgeInsets.only(right: 2),
+          decoration: BoxDecoration(
+            color: c,
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.black12),
+          ),
+        );
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [dot(pal.primary), dot(pal.accent), dot(pal.background)],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final p = context.watch<ThemeProvider>().palette;
+
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, userSnapshot) {
         final currentUser = userSnapshot.data;
 
         if (userSnapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            backgroundColor: _cream,
-            body: Center(child: CircularProgressIndicator(color: _orange)),
+          return Scaffold(
+            backgroundColor: p.background,
+            body: Center(child: CircularProgressIndicator(color: p.primary)),
           );
         }
 
         if (currentUser == null) {
-          return _guestMode(context);
+          return _guestMode(context, p);
         }
 
         return StreamBuilder<DocumentSnapshot>(
@@ -86,9 +155,10 @@ class _UserScreenState extends State<UserScreen> {
               .snapshots(),
           builder: (context, snapshot) {
             if (!snapshot.hasData) {
-              return const Scaffold(
-                backgroundColor: _cream,
-                body: Center(child: CircularProgressIndicator(color: _orange)),
+              return Scaffold(
+                backgroundColor: p.background,
+                body:
+                    Center(child: CircularProgressIndicator(color: p.primary)),
               );
             }
 
@@ -100,15 +170,15 @@ class _UserScreenState extends State<UserScreen> {
             final avatarUrl = data?['avatarUrl'] as String?;
 
             return Scaffold(
-              backgroundColor: _cream,
+              backgroundColor: p.background,
               body: SafeArea(
                 child: ListView(
                   padding: const EdgeInsets.fromLTRB(18, 20, 18, 28),
                   children: [
-                    _header(context, nickname, email, cat, avatarUrl),
+                    _header(p, nickname, email, cat, avatarUrl),
                     const SizedBox(height: 24),
-                    _settingsCard([
-                      _row(Icons.edit_rounded, 'Edit profile', () async {
+                    _settingsCard(p, [
+                      _row(p, Icons.edit_rounded, 'Edit profile', () async {
                         await Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -120,16 +190,16 @@ class _UserScreenState extends State<UserScreen> {
                           ),
                         );
                       }),
-                      _divider(),
-                      _row(Icons.notifications_rounded, 'Notifications', () {
+                      _divider(p),
+                      _row(p, Icons.notifications_rounded, 'Notifications', () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                               builder: (_) => const NotificationsScreen()),
                         );
                       }),
-                      _divider(),
-                      _row(Icons.bar_chart_rounded, 'Step history', () {
+                      _divider(p),
+                      _row(p, Icons.bar_chart_rounded, 'Step history', () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -138,12 +208,16 @@ class _UserScreenState extends State<UserScreen> {
                       }),
                     ]),
                     const SizedBox(height: 16),
-                    _settingsCard([
-                      _row(Icons.info_outline_rounded, 'About PawQuest',
+                    _settingsCard(p, [
+                      _row(p, Icons.palette_rounded, 'Theme',
+                          () => _showThemePicker(context, p),
+                          trailing: p.name),
+                      _divider(p),
+                      _row(p, Icons.info_outline_rounded, 'About PawQuest',
                           () => _showAbout(context)),
                     ]),
                     const SizedBox(height: 24),
-                    _logoutButton(context),
+                    _logoutButton(context, p),
                   ],
                 ),
               ),
@@ -167,12 +241,12 @@ class _UserScreenState extends State<UserScreen> {
 
   // ----------------------------------------------------------------- pieces
 
-  Widget _header(BuildContext context, String nickname, String email,
-      String cat, String? avatarUrl) {
+  Widget _header(AppPalette p, String nickname, String email, String cat,
+      String? avatarUrl) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: p.surface,
         borderRadius: BorderRadius.circular(26),
         boxShadow: const [
           BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4)),
@@ -184,40 +258,37 @@ class _UserScreenState extends State<UserScreen> {
             padding: const EdgeInsets.all(3),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: _yellow, width: 3),
+              border: Border.all(color: p.accent, width: 3),
             ),
             child: CircleAvatar(
               radius: 46,
-              backgroundColor: _yellow.withValues(alpha: 0.35),
+              backgroundColor: p.accent.withValues(alpha: 0.35),
               backgroundImage: _avatar(cat, avatarUrl),
             ),
           ),
           const SizedBox(height: 14),
           Text(
             nickname,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
-              color: _brown,
+              color: p.text,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             email,
-            style: TextStyle(
-              fontSize: 14,
-              color: _brown.withValues(alpha: 0.6),
-            ),
+            style: TextStyle(fontSize: 14, color: p.textMuted),
           ),
         ],
       ),
     );
   }
 
-  Widget _settingsCard(List<Widget> rows) {
+  Widget _settingsCard(AppPalette p, List<Widget> rows) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: p.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: const [
           BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 3)),
@@ -227,7 +298,8 @@ class _UserScreenState extends State<UserScreen> {
     );
   }
 
-  Widget _row(IconData icon, String title, VoidCallback onTap) {
+  Widget _row(AppPalette p, IconData icon, String title, VoidCallback onTap,
+      {String? trailing}) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -241,24 +313,32 @@ class _UserScreenState extends State<UserScreen> {
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: _yellow.withValues(alpha: 0.25),
+                  color: p.accent.withValues(alpha: 0.25),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(icon, size: 20, color: _orange),
+                child: Icon(icon, size: 20, color: p.primary),
               ),
               const SizedBox(width: 14),
               Expanded(
                 child: Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: _brown,
+                    color: p.text,
                   ),
                 ),
               ),
+              if (trailing != null)
+                Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: Text(
+                    trailing,
+                    style: TextStyle(fontSize: 13, color: p.textMuted),
+                  ),
+                ),
               Icon(Icons.chevron_right_rounded,
-                  color: _brown.withValues(alpha: 0.35)),
+                  color: p.text.withValues(alpha: 0.35)),
             ],
           ),
         ),
@@ -266,18 +346,18 @@ class _UserScreenState extends State<UserScreen> {
     );
   }
 
-  Widget _divider() => Divider(
+  Widget _divider(AppPalette p) => Divider(
         height: 1,
         thickness: 1,
         indent: 68,
         endIndent: 16,
-        color: _brown.withValues(alpha: 0.08),
+        color: p.text.withValues(alpha: 0.08),
       );
 
-  Widget _logoutButton(BuildContext context) {
+  Widget _logoutButton(BuildContext context, AppPalette p) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: p.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: const [
           BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 3)),
@@ -296,19 +376,18 @@ class _UserScreenState extends State<UserScreen> {
                   width: 38,
                   height: 38,
                   decoration: BoxDecoration(
-                    color: _danger.withValues(alpha: 0.15),
+                    color: p.danger.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.logout_rounded,
-                      size: 20, color: _danger),
+                  child: Icon(Icons.logout_rounded, size: 20, color: p.danger),
                 ),
                 const SizedBox(width: 14),
-                const Text(
+                Text(
                   'Log out',
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
-                    color: _danger,
+                    color: p.danger,
                   ),
                 ),
               ],
@@ -319,29 +398,25 @@ class _UserScreenState extends State<UserScreen> {
     );
   }
 
-  Widget _guestMode(BuildContext context) {
+  Widget _guestMode(BuildContext context, AppPalette p) {
     return Scaffold(
-      backgroundColor: _cream,
+      backgroundColor: p.background,
       body: SafeArea(
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.account_circle_rounded,
-                  size: 88, color: _orange),
+              Icon(Icons.account_circle_rounded, size: 88, color: p.primary),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'You are in Guest Mode',
                 style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: _brown),
+                    fontSize: 18, fontWeight: FontWeight.bold, color: p.text),
               ),
               const SizedBox(height: 8),
               Text(
                 'Log in to save your steps and profile.',
-                style: TextStyle(
-                    fontSize: 14, color: _brown.withValues(alpha: 0.6)),
+                style: TextStyle(fontSize: 14, color: p.textMuted),
               ),
               const SizedBox(height: 24),
               SizedBox(
@@ -351,7 +426,7 @@ class _UserScreenState extends State<UserScreen> {
                   onPressed: () =>
                       Navigator.pushReplacementNamed(context, '/login'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _orange,
+                    backgroundColor: p.primary,
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(

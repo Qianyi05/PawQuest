@@ -1,7 +1,9 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:pawquest/services/forum_service.dart';
-import 'package:pawquest/screens/app_theme.dart';
+import 'package:pawquest/providers/theme_provider.dart';
+import 'package:pawquest/theme/app_palette.dart';
 
 class CustomBottomBar extends StatelessWidget {
   final int currentIndex;
@@ -17,6 +19,7 @@ class CustomBottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.watch<ThemeProvider>().palette;
     return Padding(
       padding: const EdgeInsets.only(bottom: 24.0, left: 24.0, right: 24.0),
       child: ClipRRect(
@@ -36,11 +39,11 @@ class CustomBottomBar extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildIcon('assets/images/icons/ic_home.png', 0),
-                _buildIcon('assets/images/icons/ic_badge.png', 1),
-                _buildIcon(Icons.cloud, 2),
-                _buildIcon('assets/images/icons/ic_community.png', 3),
-                _buildIcon('assets/images/icons/ic_user.png', 4,
+                _buildIcon('assets/images/icons/ic_home.png', 0, p),
+                _buildIcon('assets/images/icons/ic_badge.png', 1, p),
+                _buildIcon(Icons.cloud, 2, p),
+                _buildIcon('assets/images/icons/ic_community.png', 3, p),
+                _buildIcon('assets/images/icons/ic_user.png', 4, p,
                     showBadge: true),
               ],
             ),
@@ -50,18 +53,21 @@ class CustomBottomBar extends StatelessWidget {
     );
   }
 
-  Widget _buildIcon(Object icon, int index, {bool showBadge = false}) {
+  Widget _buildIcon(Object icon, int index, AppPalette p,
+      {bool showBadge = false}) {
     final isSelected = index == currentIndex;
+    final color =
+        isSelected ? p.primary : p.text.withValues(alpha: 0.4);
 
     final iconWidget = icon is IconData
         ? Icon(
             icon,
-            color: isSelected ? AppTheme.puddingOrange : AppTheme.puddingBrown.withValues(alpha: 0.4),
+            color: color,
             size: 42,
           )
         : Image.asset(
             icon as String,
-            color: isSelected ? AppTheme.puddingOrange : AppTheme.puddingBrown.withValues(alpha: 0.4),
+            color: color,
             width: 50,
             height: 50,
           );
