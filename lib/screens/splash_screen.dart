@@ -55,13 +55,15 @@ class _SplashScreenState extends State<SplashScreen>
                 fit: BoxFit.cover,
               ),
             ),
-            // 中心内容：底部等宽按钮
+            // 底部按钮：左侧留出背景里鱼/饼干图标的位置，按钮排在右边
             Align(
               alignment: Alignment.bottomCenter,
               child: Padding(
-                padding: const EdgeInsets.only(bottom: 110),
+                padding: const EdgeInsets.only(
+                    left: 124, right: 28, bottom: 110),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _welcomeButton('Login', () => _goTo(const LoginScreen())),
                     const SizedBox(height: 14),
@@ -80,7 +82,6 @@ class _SplashScreenState extends State<SplashScreen>
 
   Widget _welcomeButton(String label, VoidCallback onTap) {
     return SizedBox(
-      width: 150,
       height: 50,
       child: ElevatedButton(
         onPressed: onTap,
