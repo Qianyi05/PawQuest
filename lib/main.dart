@@ -52,10 +52,11 @@ class PawQuestApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.watch<ThemeProvider>().palette;
     return MaterialApp(
       title: 'PawQuest',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.mainTheme,
+      theme: AppTheme.themeFor(palette),
       initialRoute: '/', // 设置初始路由
       routes: {
         '/': (context) => const SplashScreen(),
