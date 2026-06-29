@@ -3,6 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:provider/provider.dart';
+import 'package:pawquest/providers/theme_provider.dart';
+import 'package:pawquest/theme/app_palette.dart';
 
 /// Unified "edit user info" screen: change display name and character (and,
 /// later, avatar) in one place.
@@ -23,10 +26,7 @@ class EditProfileScreen extends StatefulWidget {
 }
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
-  static const Color _cream = Color(0xFFFFF6EB);
-  static const Color _yellow = Color(0xFFF8D66D);
-  static const Color _orange = Color(0xFFF77F42);
-  static const Color _brown = Color(0xFF6B4F3A);
+  AppPalette p = AppPalette.all.first;
 
   static const List<String> _cats = [
     'cat1', 'cat2', 'cat3', 'cat4', 'cat5', 'cat6', 'cat7', 'cat8', 'cat9'
@@ -107,15 +107,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: _brown.withValues(alpha: 0.2),
+                color: p.text.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
             const SizedBox(height: 8),
             ListTile(
-              leading: const Icon(Icons.photo_library_rounded, color: _orange),
-              title: const Text('Choose from photos',
-                  style: TextStyle(color: _brown, fontWeight: FontWeight.w600)),
+              leading: Icon(Icons.photo_library_rounded, color: p.primary),
+              title: Text('Choose from photos',
+                  style: TextStyle(color: p.text, fontWeight: FontWeight.w600)),
               onTap: () {
                 Navigator.pop(sheetCtx);
                 _pickAndUpload();
@@ -123,10 +123,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ),
             if (_avatarUrl != null && _avatarUrl!.isNotEmpty)
               ListTile(
-                leading: const Icon(Icons.restore_rounded, color: _brown),
-                title: const Text('Use my character instead',
+                leading: Icon(Icons.restore_rounded, color: p.text),
+                title: Text('Use my character instead',
                     style:
-                        TextStyle(color: _brown, fontWeight: FontWeight.w600)),
+                        TextStyle(color: p.text, fontWeight: FontWeight.w600)),
                 onTap: () {
                   Navigator.pop(sheetCtx);
                   setState(() => _avatarUrl = null);
@@ -177,12 +177,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    p = context.watch<ThemeProvider>().palette;
     return Scaffold(
-      backgroundColor: _cream,
+      backgroundColor: p.background,
       appBar: AppBar(
         title: const Text('Edit Profile',
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        backgroundColor: _yellow,
+        backgroundColor: p.accent,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
@@ -197,7 +198,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 children: [
                   CircleAvatar(
                     radius: 54,
-                    backgroundColor: _yellow.withValues(alpha: 0.4),
+                    backgroundColor: p.accent.withValues(alpha: 0.4),
                     backgroundImage: _avatarProvider(),
                   ),
                   if (_uploading)
@@ -215,9 +216,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     child: Container(
                       padding: const EdgeInsets.all(7),
                       decoration: BoxDecoration(
-                        color: _orange,
+                        color: p.primary,
                         shape: BoxShape.circle,
-                        border: Border.all(color: _cream, width: 2.5),
+                        border: Border.all(color: p.background, width: 2.5),
                       ),
                       child: const Icon(Icons.camera_alt_rounded,
                           color: Colors.white, size: 16),
@@ -233,7 +234,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               'Tap to change photo',
               style: TextStyle(
                 fontSize: 12,
-                color: _brown.withValues(alpha: 0.55),
+                color: p.text.withValues(alpha: 0.55),
               ),
             ),
           ),
@@ -243,7 +244,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           const SizedBox(height: 8),
           TextField(
             controller: _nameController,
-            style: const TextStyle(color: _brown, fontWeight: FontWeight.w600),
+            style: TextStyle(color: p.text, fontWeight: FontWeight.w600),
             decoration: InputDecoration(
               hintText: 'Enter your name',
               filled: true,
@@ -254,7 +255,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 borderRadius: BorderRadius.circular(16),
                 borderSide: BorderSide.none,
               ),
-              prefixIcon: const Icon(Icons.person_rounded, color: _orange),
+              prefixIcon: Icon(Icons.person_rounded, color: p.primary),
             ),
           ),
           const SizedBox(height: 28),
@@ -269,7 +270,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             child: ElevatedButton(
               onPressed: _saving ? null : _save,
               style: ElevatedButton.styleFrom(
-                backgroundColor: _orange,
+                backgroundColor: p.primary,
                 foregroundColor: Colors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
@@ -295,10 +296,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   Widget _label(String text) => Text(
         text,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.bold,
-          color: _brown,
+          color: p.text,
         ),
       );
 
@@ -319,7 +320,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: selected ? _orange : Colors.transparent,
+                color: selected ? p.primary : Colors.transparent,
                 width: 2.5,
               ),
               boxShadow: const [
@@ -343,7 +344,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     top: 6,
                     right: 6,
                     child: Icon(Icons.check_circle_rounded,
-                        color: _orange, size: 20),
+                        color: p.primary, size: 20),
                   ),
               ],
             ),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
 import 'package:pawquest/services/forum_service.dart';
+import 'package:pawquest/providers/theme_provider.dart';
 import 'post_detail_screen.dart';
 
 class NotificationsScreen extends StatefulWidget {
@@ -41,8 +43,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.watch<ThemeProvider>().palette;
     return Scaffold(
-      appBar: AppBar(title: const Text('Notifications')),
+      backgroundColor: p.background,
+      appBar: AppBar(
+        title: const Text('Notifications'),
+        backgroundColor: p.accent,
+      ),
       body: StreamBuilder<QuerySnapshot>(
         stream: _forum.notificationsStream(),
         builder: (context, snapshot) {

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
+import 'package:pawquest/providers/theme_provider.dart';
+import 'package:pawquest/theme/app_palette.dart';
 import 'main_screen.dart';
 
 class ChooseCatScreen extends StatefulWidget {
@@ -11,10 +14,7 @@ class ChooseCatScreen extends StatefulWidget {
 }
 
 class _ChooseCatScreenState extends State<ChooseCatScreen> {
-  static const Color _cream = Color(0xFFFFF6EB);
-  static const Color _yellow = Color(0xFFF8D66D);
-  static const Color _orange = Color(0xFFF77F42);
-  static const Color _brown = Color(0xFF6B4F3A);
+  AppPalette p = AppPalette.all.first;
 
   final List<String> cats = [
     'cat1', 'cat2', 'cat3', 'cat4', 'cat5', 'cat6', 'cat7', 'cat8', 'cat9'
@@ -70,12 +70,13 @@ class _ChooseCatScreenState extends State<ChooseCatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    p = context.watch<ThemeProvider>().palette;
     return Scaffold(
-      backgroundColor: _cream,
+      backgroundColor: p.background,
       appBar: AppBar(
         title: const Text('Choose your character',
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        backgroundColor: _yellow,
+        backgroundColor: p.accent,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
@@ -90,7 +91,7 @@ class _ChooseCatScreenState extends State<ChooseCatScreen> {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: _brown.withValues(alpha: 0.75),
+                color: p.text.withValues(alpha: 0.75),
               ),
             ),
           ),
@@ -115,7 +116,7 @@ class _ChooseCatScreenState extends State<ChooseCatScreen> {
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(18),
                       border: Border.all(
-                        color: isSelected ? _orange : Colors.transparent,
+                        color: isSelected ? p.primary : Colors.transparent,
                         width: 2.5,
                       ),
                       boxShadow: const [
@@ -147,8 +148,8 @@ class _ChooseCatScreenState extends State<ChooseCatScreen> {
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
                                   color: isSelected
-                                      ? _orange
-                                      : _brown.withValues(alpha: 0.7),
+                                      ? p.primary
+                                      : p.text.withValues(alpha: 0.7),
                                 ),
                               ),
                             ),
@@ -159,7 +160,7 @@ class _ChooseCatScreenState extends State<ChooseCatScreen> {
                             top: 6,
                             right: 6,
                             child: Icon(Icons.check_circle_rounded,
-                                color: _orange, size: 20),
+                                color: p.primary, size: 20),
                           ),
                       ],
                     ),
@@ -176,7 +177,7 @@ class _ChooseCatScreenState extends State<ChooseCatScreen> {
               child: ElevatedButton(
                 onPressed: _saving ? null : _saveAndContinue,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _orange,
+                  backgroundColor: p.primary,
                   foregroundColor: Colors.white,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
