@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 
 import '../providers/daily_quest_provider.dart';
 import '../providers/step_provider.dart';
+import '../providers/theme_provider.dart';
+import '../theme/app_palette.dart';
 
 class WeatherScreen extends StatefulWidget {
   const WeatherScreen({super.key});
@@ -23,14 +25,16 @@ class _WeatherScreenState extends State<WeatherScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.watch<ThemeProvider>().palette;
     final steps = context.watch<StepProvider>().todaySteps;
     final provider = context.watch<DailyQuestProvider>();
     final weather = provider.weather;
     final quest = provider.quest;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF6EB),
+      backgroundColor: p.background,
       appBar: AppBar(
+        backgroundColor: p.accent,
         title: const Text('Weather Quest'),
         actions: [
           IconButton(
@@ -100,6 +104,7 @@ class _WeatherCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.watch<ThemeProvider>().palette;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(18),
@@ -123,10 +128,10 @@ class _WeatherCard extends StatelessWidget {
               temperature == null
                   ? '-- °C'
                   : '${temperature!.toStringAsFixed(1)} °C',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 42,
                 fontWeight: FontWeight.w900,
-                color: Color(0xFF6C4A2F),
+                color: p.text,
               ),
             ),
             const SizedBox(height: 8),
@@ -166,6 +171,7 @@ class _QuestCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.watch<ThemeProvider>().palette;
     final progress =
         goalSteps == 0 ? 0.0 : (currentSteps / goalSteps).clamp(0.0, 1.0);
 
@@ -179,7 +185,7 @@ class _QuestCard extends StatelessWidget {
               children: [
                 Icon(
                   completed ? Icons.verified : Icons.flag,
-                  color: completed ? Colors.green : const Color(0xFFF77F42),
+                  color: completed ? Colors.green : p.primary,
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -198,8 +204,8 @@ class _QuestCard extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: progress,
                 minHeight: 14,
-                backgroundColor: const Color(0xFFFFE2B8),
-                color: completed ? Colors.green : const Color(0xFFF8D66D),
+                backgroundColor: p.accent.withValues(alpha: 0.35),
+                color: completed ? Colors.green : p.accent,
               ),
             ),
             const SizedBox(height: 10),
@@ -229,8 +235,9 @@ class _MessageCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.watch<ThemeProvider>().palette;
     return Card(
-      color: const Color(0xFFFFF1D6),
+      color: p.accent.withValues(alpha: 0.2),
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Row(

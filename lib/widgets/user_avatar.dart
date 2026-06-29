@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
+import 'package:pawquest/providers/theme_provider.dart';
+import 'package:pawquest/theme/app_palette.dart';
 
 /// Shows a user's current avatar (uploaded photo if any, otherwise their cat
 /// character), resolved live from their user doc. Falls back to the first
@@ -19,9 +22,6 @@ class UserAvatar extends StatelessWidget {
     this.radius = 16,
   });
 
-  static const Color _yellow = Color(0xFFF8D66D);
-  static const Color _brown = Color(0xFF6B4F3A);
-
   static final Map<String, Future<Map<String, dynamic>?>> _cache = {};
 
   Future<Map<String, dynamic>?> _load(String uid) {
@@ -38,16 +38,16 @@ class UserAvatar extends StatelessWidget {
     });
   }
 
-  Widget _circle(ImageProvider? img, String letter) {
+  Widget _circle(ImageProvider? img, String letter, AppPalette p) {
     return CircleAvatar(
       radius: radius,
-      backgroundColor: _yellow.withValues(alpha: 0.4),
+      backgroundColor: p.accent.withValues(alpha: 0.4),
       backgroundImage: img,
       child: img == null
           ? Text(
               letter,
               style: TextStyle(
-                color: _brown,
+                color: p.text,
                 fontWeight: FontWeight.bold,
                 fontSize: radius * 0.85,
               ),
@@ -58,11 +58,12 @@ class UserAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.watch<ThemeProvider>().palette;
     final uid = userId;
     final letter = (fallbackName != null && fallbackName!.isNotEmpty)
         ? fallbackName![0].toUpperCase()
         : '?';
-    if (uid == null || uid.isEmpty) return _circle(null, letter);
+    if (uid == null || uid.isEmpty) return _circle(null, letter, p);
 
     return FutureBuilder<Map<String, dynamic>?>(
       future: _load(uid),
@@ -76,7 +77,7 @@ class UserAvatar extends StatelessWidget {
         } else if (cat != null && cat.isNotEmpty) {
           img = AssetImage('assets/images/cats_profile/$cat.jpeg');
         }
-        return _circle(img, letter);
+        return _circle(img, letter, p);
       },
     );
   }
