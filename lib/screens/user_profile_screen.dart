@@ -6,6 +6,7 @@ import 'package:pawquest/providers/theme_provider.dart';
 import 'package:pawquest/theme/app_palette.dart';
 import 'package:pawquest/widgets/user_avatar.dart';
 import 'package:pawquest/services/follow_service.dart';
+import 'post_detail_screen.dart';
 
 /// Public profile for any user: avatar, name, city/age, bio, follow button,
 /// follower/following counts, and their public posts.
@@ -269,9 +270,9 @@ class UserProfileScreen extends StatelessWidget {
             final timeLabel = ts is Timestamp
                 ? ts.toDate().toString().substring(0, 16)
                 : '';
+            final imageUrl = d['imageUrl'] as String?;
             return Container(
               margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: p.surface,
                 borderRadius: BorderRadius.circular(18),
@@ -282,18 +283,54 @@ class UserProfileScreen extends StatelessWidget {
                       offset: Offset(0, 3)),
                 ],
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(d['content'] ?? '',
-                      style: TextStyle(
-                          fontSize: 15, color: p.text, height: 1.35)),
-                  const SizedBox(height: 8),
-                  Text(timeLabel,
-                      style: TextStyle(
-                          fontSize: 12,
-                          color: p.text.withValues(alpha: 0.45))),
-                ],
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(18),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => PostDetailScreen(
+                        postId: doc.id,
+                        authorName: d['authorName'] ?? '',
+                        content: d['content'] ?? '',
+                        timestamp: ts is Timestamp ? ts : Timestamp.now(),
+                        authorId: d['authorId'] as String?,
+                        imageUrl: imageUrl,
+                      ),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if ((d['content'] ?? '').toString().isNotEmpty)
+                          Text(d['content'] ?? '',
+                              style: TextStyle(
+                                  fontSize: 15, color: p.text, height: 1.35)),
+                        if (imageUrl != null && imageUrl.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.network(
+                              imageUrl,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) =>
+                                  const SizedBox.shrink(),
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 8),
+                        Text(timeLabel,
+                            style: TextStyle(
+                                fontSize: 12,
+                                color: p.text.withValues(alpha: 0.45))),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             );
           }).toList(),

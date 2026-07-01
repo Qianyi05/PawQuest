@@ -7,6 +7,7 @@ import 'package:pawquest/providers/theme_provider.dart';
 import 'package:pawquest/theme/app_palette.dart';
 import 'post_detail_screen.dart';
 import 'user_profile_screen.dart';
+import 'new_post_screen.dart';
 import '../widgets/user_avatar.dart';
 import '../widgets/user_name.dart';
 
@@ -105,65 +106,9 @@ class CommunityScreen extends StatelessWidget {
   }
 
   void _showPostDialog(BuildContext context, AppPalette p) {
-    final controller = TextEditingController();
-    final user = FirebaseAuth.instance.currentUser;
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-        title: Text('New Post',
-            style: TextStyle(color: p.text, fontWeight: FontWeight.bold)),
-        content: TextField(
-          controller: controller,
-          maxLines: 4,
-          minLines: 2,
-          style: TextStyle(color: p.text),
-          decoration: InputDecoration(
-            hintText: 'Share something...',
-            hintStyle: TextStyle(color: p.text.withValues(alpha: 0.4)),
-            filled: true,
-            fillColor: p.background,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide.none,
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: TextStyle(color: p.textMuted)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: p.primary,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14)),
-            ),
-            onPressed: () async {
-              final content = controller.text.trim();
-              if (content.isNotEmpty && user != null) {
-                final nickname = await _forum.resolveNickname(user.uid);
-                await FirebaseFirestore.instance.collection('posts').add({
-                  'authorId': user.uid,
-                  'authorName': nickname,
-                  'content': content,
-                  'likes': 0,
-                  'likedBy': <String>[],
-                  'timestamp': FieldValue.serverTimestamp(),
-                });
-              }
-              if (context.mounted) Navigator.pop(context);
-            },
-            child: const Text('Post'),
-          ),
-        ],
-      ),
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const NewPostScreen()),
     );
   }
 }
@@ -225,6 +170,7 @@ class _PostCard extends StatelessWidget {
                 content: postData['content'] ?? '',
                 timestamp: ts is Timestamp ? ts : Timestamp.now(),
                 authorId: postData['authorId'] as String?,
+                imageUrl: postData['imageUrl'] as String?,
               ),
             ),
           ),
@@ -280,10 +226,34 @@ class _PostCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 10),
-                Text(
-                  postData['content'] ?? '',
-                  style: TextStyle(fontSize: 15, color: p.text, height: 1.35),
-                ),
+                if ((postData['content'] ?? '').toString().isNotEmpty)
+                  Text(
+                    postData['content'] ?? '',
+                    style: TextStyle(fontSize: 15, color: p.text, height: 1.35),
+                  ),
+                if (postData['imageUrl'] != null &&
+                    (postData['imageUrl'] as String).isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: Image.network(
+                      postData['imageUrl'],
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      loadingBuilder: (context, child, progress) {
+                        if (progress == null) return child;
+                        return Container(
+                          height: 180,
+                          alignment: Alignment.center,
+                          color: p.background,
+                          child: CircularProgressIndicator(
+                              color: p.primary, strokeWidth: 2),
+                        );
+                      },
+                      errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 10),
                 Row(
                   children: [

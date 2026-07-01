@@ -191,17 +191,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 child: Image.asset(current.backgroundAsset, fit: BoxFit.cover),
               ),
               if (user != null)
-                FutureBuilder<DocumentSnapshot>(
-                  future: FirebaseFirestore.instance
+                StreamBuilder<DocumentSnapshot>(
+                  stream: FirebaseFirestore.instance
                       .collection('users')
                       .doc(user.uid)
-                      .get(),
+                      .snapshots(),
                   builder: (context, snap) {
-                    String catName = 'cat1';
-                    if (snap.hasData) {
-                      final data = snap.data!.data() as Map<String, dynamic>?;
-                      catName = data?['cat'] ?? 'cat1';
-                    }
+                    // 数据没回来前不显示猫,避免先显示 cat1(白猫)再切换的闪烁
+                    if (!snap.hasData) return const SizedBox.shrink();
+                    final data = snap.data!.data() as Map<String, dynamic>?;
+                    final catName = data?['cat'] ?? 'cat1';
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 96),
                       child: Align(
@@ -210,6 +209,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           'assets/images/cats/$catName.gif',
                           width: 220,
                           height: 220,
+                          gaplessPlayback: true,
                         ),
                       ),
                     );

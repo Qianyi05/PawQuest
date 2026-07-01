@@ -3,30 +3,6 @@ import HealthKit
 import CoreLocation
 import Combine
 
-struct City {
-    let name: String
-    let stepRequired: Int
-}
-
-let kCities: [City] = [
-    City(name: "Como", stepRequired: 0),
-    City(name: "Milan", stepRequired: 1000),
-    City(name: "Turin", stepRequired: 4000),
-    City(name: "Genova", stepRequired: 6000),
-    City(name: "Pisa", stepRequired: 10000),
-    City(name: "Venice", stepRequired: 12000),
-    City(name: "Florence", stepRequired: 14000),
-    City(name: "Bologna", stepRequired: 18000),
-    City(name: "SanMarino", stepRequired: 22000),
-    City(name: "Rome", stepRequired: 26000),
-    City(name: "Abruzzo", stepRequired: 33000),
-    City(name: "Naples", stepRequired: 37000),
-    City(name: "Caserta", stepRequired: 39000),
-    City(name: "AmalfiCoast", stepRequired: 45000),
-    City(name: "Sicily", stepRequired: 60000),
-    City(name: "Sardegna", stepRequired: 70000),
-]
-
 enum Palette {
     static let bg       = Color(hex: "#0E0F13")
     static let card     = Color(hex: "#1B1D24")
@@ -37,52 +13,32 @@ enum Palette {
     static let ring     = Color(hex: "#2A2D37")
 }
 
-struct TravelState {
-    var steps: Int = 0
-    var city: String = "—"
-    var nextCity: String = ""
-    var remaining: Int = 0
-    var progress: Double = 0.0
-    var unlockedCount: Int = 0
-
-    static func from(steps: Int) -> TravelState {
-        var s = TravelState()
-        s.steps = steps
-        var current = kCities[0]
-        var next: City? = nil
-        var unlocked = 0
-        for (i, c) in kCities.enumerated() {
-            if steps >= c.stepRequired {
-                current = c
-                unlocked = i + 1
-                next = (i + 1 < kCities.count) ? kCities[i + 1] : nil
-            }
-        }
-        s.city = current.name
-        s.unlockedCount = unlocked
-        if let n = next {
-            s.nextCity = n.name
-            s.remaining = max(0, n.stepRequired - steps)
-            let span = n.stepRequired - current.stepRequired
-            s.progress = span > 0 ? min(1.0, Double(steps - current.stepRequired) / Double(span)) : 1.0
-        } else {
-            s.progress = 1.0
-        }
-        return s
-    }
-}
-
 class HealthModel: ObservableObject {
-    @Published var travel = TravelState()
+    @Published var steps = 0
     @Published var authorized = false
     @Published var realCity = "Locating…"
+    @Published var temperature: String = ""
+    @Published var weatherReady = false
+
+    let dailyGoal = 10000
 
     private let store = HKHealthStore()
     private let loc = LocationHelper()
 
+    var progress: Double {
+        guard dailyGoal > 0 else { return 0 }
+        return min(1.0, Double(steps) / Double(dailyGoal))
+    }
+
     func start() {
-        loc.onCity = { [weak self] name in
-            DispatchQueue.main.async { self?.realCity = name }
+        loc.onLocation = { [weak self] lat, lon in
+            self?.fetchCity(lat: lat, lon: lon)
+            self?.fetchWeather(lat: lat, lon: lon)
+        }
+        loc.onFallbackCity = { [weak self] name in
+            DispatchQueue.main.async {
+                if self?.realCity == "Locating…" { self?.realCity = name }
+            }
         }
         loc.request()
 
@@ -103,19 +59,57 @@ class HealthModel: ObservableObject {
         let q = HKStatisticsQuery(quantityType: stepType,
                                   quantitySamplePredicate: predicate,
                                   options: .cumulativeSum) { [weak self] _, stats, _ in
-            let steps = Int(stats?.sumQuantity()?.doubleValue(for: .count()) ?? 0)
+            let s = Int(stats?.sumQuantity()?.doubleValue(for: .count()) ?? 0)
             DispatchQueue.main.async {
-                self?.travel = TravelState.from(steps: steps)
+                self?.steps = s
                 self?.authorized = true
             }
         }
         store.execute(q)
     }
+
+    // MARK: - Nominatim
+    private func fetchCity(lat: Double, lon: Double) {
+        let urlStr = "https://nominatim.openstreetmap.org/reverse?lat=\(lat)&lon=\(lon)&format=json&zoom=10&accept-language=en"
+        guard let url = URL(string: urlStr) else { return }
+        var req = URLRequest(url: url)
+        req.setValue("PawQuest/1.0 (watchOS app)", forHTTPHeaderField: "User-Agent")
+        URLSession.shared.dataTask(with: req) { [weak self] data, _, _ in
+            guard let data = data,
+                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let addr = json["address"] as? [String: Any] else { return }
+            let city = (addr["city"] as? String)
+                ?? (addr["town"] as? String)
+                ?? (addr["village"] as? String)
+                ?? (addr["county"] as? String)
+                ?? (addr["state"] as? String)
+            if let city = city {
+                DispatchQueue.main.async { self?.realCity = city }
+            }
+        }.resume()
+    }
+
+    // MARK: - Open-Meteo
+    private func fetchWeather(lat: Double, lon: Double) {
+        let urlStr = "https://api.open-meteo.com/v1/forecast?latitude=\(lat)&longitude=\(lon)&current=temperature_2m"
+        guard let url = URL(string: urlStr) else { return }
+        URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
+            guard let data = data,
+                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let current = json["current"] as? [String: Any],
+                  let temp = current["temperature_2m"] as? Double else { return }
+            DispatchQueue.main.async {
+                self?.temperature = "\(Int(temp.rounded()))°C"
+                self?.weatherReady = true
+            }
+        }.resume()
+    }
 }
 
 class LocationHelper: NSObject, CLLocationManagerDelegate {
     private let manager = CLLocationManager()
-    var onCity: ((String) -> Void)?
+    var onLocation: ((Double, Double) -> Void)?
+    var onFallbackCity: ((String) -> Void)?          
 
     override init() {
         super.init()
@@ -131,21 +125,14 @@ class LocationHelper: NSObject, CLLocationManagerDelegate {
         let s = m.authorizationStatus
         if s == .authorizedWhenInUse || s == .authorizedAlways {
             m.requestLocation()
-        } else if s == .denied || s == .restricted {
-            onCity?("Location off")
         }
     }
 
     func locationManager(_ m: CLLocationManager, didUpdateLocations locs: [CLLocation]) {
         guard let loc = locs.first else { return }
-        let fallback = Self.cityFromCoordinate(loc.coordinate)
-        onCity?(fallback)
-        CLGeocoder().reverseGeocodeLocation(loc) { [weak self] places, _ in
-            if let p = places?.first,
-               let name = p.locality ?? p.administrativeArea ?? p.country {
-                self?.onCity?(name)
-            }
-        }
+        let c = loc.coordinate
+        onFallbackCity?(Self.cityFromCoordinate(c))
+        onLocation?(c.latitude, c.longitude)          
     }
 
     func locationManager(_ m: CLLocationManager, didFailWithError error: Error) {

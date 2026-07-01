@@ -15,6 +15,7 @@ class PostDetailScreen extends StatefulWidget {
   final String content;
   final Timestamp timestamp;
   final String? authorId;
+  final String? imageUrl;
 
   const PostDetailScreen({
     super.key,
@@ -23,6 +24,7 @@ class PostDetailScreen extends StatefulWidget {
     required this.content,
     required this.timestamp,
     this.authorId,
+    this.imageUrl,
   });
 
   @override
@@ -310,6 +312,28 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           Text(widget.content,
               style: TextStyle(
                   color: p.text, fontSize: 15, height: 1.4)),
+          if (widget.imageUrl != null && widget.imageUrl!.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: Image.network(
+                widget.imageUrl!,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                loadingBuilder: (context, child, progress) {
+                  if (progress == null) return child;
+                  return Container(
+                    height: 200,
+                    alignment: Alignment.center,
+                    color: p.background,
+                    child: CircularProgressIndicator(
+                        color: p.primary, strokeWidth: 2),
+                  );
+                },
+                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+              ),
+            ),
+          ],
           const SizedBox(height: 12),
           StreamBuilder<DocumentSnapshot>(
             stream: FirebaseFirestore.instance
