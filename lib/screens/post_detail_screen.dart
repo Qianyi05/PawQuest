@@ -6,6 +6,8 @@ import 'package:provider/provider.dart';
 import 'package:pawquest/providers/theme_provider.dart';
 import 'package:pawquest/theme/app_palette.dart';
 import '../widgets/user_avatar.dart';
+import '../widgets/user_name.dart';
+import 'user_profile_screen.dart';
 
 class PostDetailScreen extends StatefulWidget {
   final String postId;
@@ -42,6 +44,15 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   void dispose() {
     _commentController.dispose();
     super.dispose();
+  }
+
+  void _openProfile(String? uid) {
+    if (uid != null && uid.isNotEmpty) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => UserProfileScreen(userId: uid)),
+      );
+    }
   }
 
   void _startReply({
@@ -264,19 +275,28 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         children: [
           Row(
             children: [
-              UserAvatar(
-                userId: widget.authorId,
-                fallbackName: widget.authorName,
-                radius: 16,
+              GestureDetector(
+                onTap: () => _openProfile(widget.authorId),
+                child: UserAvatar(
+                  userId: widget.authorId,
+                  fallbackName: widget.authorName,
+                  radius: 16,
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: Text(
-                  widget.authorName,
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: p.text,
-                      fontSize: 15),
+                child: GestureDetector(
+                  onTap: () => _openProfile(widget.authorId),
+                  child: UserName(
+                    userId: widget.authorId,
+                    fallback: widget.authorName,
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: p.text,
+                        fontSize: 15),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ),
               Text(
@@ -395,89 +415,111 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     final timeLabel =
         ts is Timestamp ? ts.toDate().toString().substring(5, 16) : '';
 
-    return GestureDetector(
-      onLongPress: isAuthor ? () => _confirmDelete(doc.id) : null,
-      child: Container(
-        margin: EdgeInsets.only(left: isReply ? 16 : 0),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: isReply
-            ? const BoxDecoration(
-                border: Border(
-                  left: BorderSide(color: Color(0xFFE0C9A6), width: 2),
-                ),
-              )
-            : null,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            UserAvatar(
+    return Container(
+      margin: EdgeInsets.only(left: isReply ? 16 : 0),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: isReply
+          ? const BoxDecoration(
+              border: Border(
+                left: BorderSide(color: Color(0xFFE0C9A6), width: 2),
+              ),
+            )
+          : null,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          GestureDetector(
+            onTap: () => _openProfile(comment['authorId'] as String?),
+            child: UserAvatar(
               userId: comment['authorId'] as String?,
               fallbackName: authorName,
               radius: isReply ? 12 : 14,
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        authorName,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: UserName(
+                        userId: comment['authorId'] as String?,
+                        fallback: authorName,
                         style: TextStyle(
                             fontWeight: FontWeight.bold, color: p.text),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      Text(
-                        timeLabel,
-                        style: TextStyle(
-                            color: p.text.withValues(alpha: 0.4),
-                            fontSize: 12),
-                      ),
-                    ],
+                    ),
+                    const SizedBox(width: 8),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          timeLabel,
+                          style: TextStyle(
+                              color: p.text.withValues(alpha: 0.4),
+                              fontSize: 12),
+                        ),
+                        if (isAuthor)
+                          InkWell(
+                            onTap: () => _confirmDelete(doc.id),
+                            borderRadius: BorderRadius.circular(20),
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 6),
+                              child: Icon(Icons.delete_outline,
+                                  size: 16,
+                                  color: p.text.withValues(alpha: 0.4)),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+                if (isReply &&
+                    replyToName != null &&
+                    replyToName.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      '↳ $replyToName',
+                      style:
+                          TextStyle(fontSize: 12, color: p.textMuted),
+                    ),
                   ),
-                  if (isReply &&
-                      replyToName != null &&
-                      replyToName.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 2),
-                      child: Text(
-                        '↳ $replyToName',
-                        style:
-                            TextStyle(fontSize: 12, color: p.textMuted),
+                const SizedBox(height: 4),
+                Text(comment['content'] ?? '',
+                    style: TextStyle(color: p.text, height: 1.35)),
+                if (user != null)
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton(
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: const Size(0, 28),
+                        tapTargetSize:
+                            MaterialTapTargetSize.shrinkWrap,
                       ),
-                    ),
-                  const SizedBox(height: 4),
-                  Text(comment['content'] ?? '',
-                      style: TextStyle(color: p.text, height: 1.35)),
-                  if (user != null)
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: TextButton(
-                        style: TextButton.styleFrom(
-                          padding: EdgeInsets.zero,
-                          minimumSize: const Size(0, 28),
-                          tapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        onPressed: () => _startReply(
-                          commentId: doc.id,
-                          name: authorName,
-                          authorId: comment['authorId'] ?? '',
-                          rootId: rootId,
-                        ),
-                        child: Text('Reply',
-                            style: TextStyle(
-                                fontSize: 13,
-                                color: p.primary,
-                                fontWeight: FontWeight.w600)),
+                      onPressed: () => _startReply(
+                        commentId: doc.id,
+                        name: authorName,
+                        authorId: comment['authorId'] ?? '',
+                        rootId: rootId,
                       ),
+                      child: Text('Reply',
+                          style: TextStyle(
+                              fontSize: 13,
+                              color: p.primary,
+                              fontWeight: FontWeight.w600)),
                     ),
-                ],
-              ),
+                  ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

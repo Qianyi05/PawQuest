@@ -176,6 +176,9 @@ class _UserScreenState extends State<UserScreen> {
                 data?['nickname'] ?? currentUser.displayName ?? 'Unnamed';
             final cat = data?['cat'] ?? 'cat1';
             final avatarUrl = data?['avatarUrl'] as String?;
+            final bio = data?['bio'] as String?;
+            final city = data?['city'] as String?;
+            final age = data?['age'] as int?;
 
             return Scaffold(
               backgroundColor: p.background,
@@ -183,7 +186,8 @@ class _UserScreenState extends State<UserScreen> {
                 child: ListView(
                   padding: const EdgeInsets.fromLTRB(18, 20, 18, 28),
                   children: [
-                    _header(p, nickname, email, cat, avatarUrl),
+                    _header(p, nickname, email, cat, avatarUrl,
+                        bio: bio, city: city, age: age),
                     const SizedBox(height: 24),
                     _settingsCard(p, [
                       _row(p, Icons.edit_rounded, 'Edit profile', () async {
@@ -194,6 +198,9 @@ class _UserScreenState extends State<UserScreen> {
                               currentNickname: nickname,
                               currentCat: cat,
                               currentAvatarUrl: avatarUrl,
+                              currentBio: bio,
+                              currentCity: city,
+                              currentAge: age,
                             ),
                           ),
                         );
@@ -250,7 +257,15 @@ class _UserScreenState extends State<UserScreen> {
   // ----------------------------------------------------------------- pieces
 
   Widget _header(AppPalette p, String nickname, String email, String cat,
-      String? avatarUrl) {
+      String? avatarUrl,
+      {String? bio, String? city, int? age}) {
+    final chips = <Widget>[];
+    if (city != null && city.isNotEmpty) {
+      chips.add(_infoChip(p, Icons.location_city_rounded, city));
+    }
+    if (age != null) {
+      chips.add(_infoChip(p, Icons.cake_rounded, '$age'));
+    }
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
       decoration: BoxDecoration(
@@ -288,6 +303,47 @@ class _UserScreenState extends State<UserScreen> {
             email,
             style: TextStyle(fontSize: 14, color: p.textMuted),
           ),
+          if (chips.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              alignment: WrapAlignment.center,
+              children: chips,
+            ),
+          ],
+          if (bio != null && bio.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            Text(
+              bio,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: p.text.withValues(alpha: 0.75),
+                height: 1.4,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _infoChip(AppPalette p, IconData icon, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: p.accent.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 15, color: p.primary),
+          const SizedBox(width: 5),
+          Text(label,
+              style: TextStyle(
+                  fontSize: 13, color: p.text, fontWeight: FontWeight.w600)),
         ],
       ),
     );

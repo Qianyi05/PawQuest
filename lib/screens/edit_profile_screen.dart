@@ -7,19 +7,26 @@ import 'package:provider/provider.dart';
 import 'package:pawquest/providers/theme_provider.dart';
 import 'package:pawquest/theme/app_palette.dart';
 import 'package:pawquest/widgets/user_avatar.dart';
+import 'package:pawquest/widgets/user_name.dart';
 
-/// Unified "edit user info" screen: change display name and character (and,
-/// later, avatar) in one place.
+/// Unified "edit user info" screen: change display name, character, avatar,
+/// and personal info (city / age / bio) in one place.
 class EditProfileScreen extends StatefulWidget {
   final String currentNickname;
   final String currentCat;
   final String? currentAvatarUrl;
+  final String? currentBio;
+  final String? currentCity;
+  final int? currentAge;
 
   const EditProfileScreen({
     super.key,
     required this.currentNickname,
     required this.currentCat,
     this.currentAvatarUrl,
+    this.currentBio,
+    this.currentCity,
+    this.currentAge,
   });
 
   @override
@@ -34,6 +41,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   ];
 
   late TextEditingController _nameController;
+  late TextEditingController _bioController;
+  late TextEditingController _cityController;
+  late TextEditingController _ageController;
   late String _selectedCat;
   String? _avatarUrl;
   bool _saving = false;
@@ -43,6 +53,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.currentNickname);
+    _bioController = TextEditingController(text: widget.currentBio ?? '');
+    _cityController = TextEditingController(text: widget.currentCity ?? '');
+    _ageController = TextEditingController(
+        text: widget.currentAge != null ? '${widget.currentAge}' : '');
     _selectedCat = widget.currentCat;
     _avatarUrl = widget.currentAvatarUrl;
   }
@@ -50,6 +64,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   void dispose() {
     _nameController.dispose();
+    _bioController.dispose();
+    _cityController.dispose();
+    _ageController.dispose();
     super.dispose();
   }
 
@@ -72,6 +89,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     setState(() => _saving = true);
     try {
+      final parsedAge = int.tryParse(_ageController.text.trim());
       await user.updateDisplayName(name);
       await FirebaseFirestore.instance
           .collection('users')
@@ -80,9 +98,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         'nickname': name,
         'cat': _selectedCat,
         'avatarUrl': _avatarUrl,
+        'bio': _bioController.text.trim(),
+        'city': _cityController.text.trim(),
+        'age': parsedAge,
       });
-      // Drop the cached avatar so the new photo shows immediately everywhere.
+      // Drop cached avatar & name so changes show immediately everywhere.
       UserAvatar.invalidate(user.uid);
+      UserName.invalidate(user.uid);
       if (!mounted) return;
       Navigator.pop(context, true);
     } catch (e) {
@@ -245,21 +267,39 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
           _label('Display name'),
           const SizedBox(height: 8),
-          TextField(
+          _textField(
             controller: _nameController,
-            style: TextStyle(color: p.text, fontWeight: FontWeight.w600),
-            decoration: InputDecoration(
-              hintText: 'Enter your name',
-              filled: true,
-              fillColor: Colors.white,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide.none,
-              ),
-              prefixIcon: Icon(Icons.person_rounded, color: p.primary),
-            ),
+            hint: 'Enter your name',
+            icon: Icons.person_rounded,
+          ),
+          const SizedBox(height: 20),
+
+          _label('City'),
+          const SizedBox(height: 8),
+          _textField(
+            controller: _cityController,
+            hint: 'Where are you based?',
+            icon: Icons.location_city_rounded,
+          ),
+          const SizedBox(height: 20),
+
+          _label('Age'),
+          const SizedBox(height: 8),
+          _textField(
+            controller: _ageController,
+            hint: 'Your age',
+            icon: Icons.cake_rounded,
+            keyboardType: TextInputType.number,
+          ),
+          const SizedBox(height: 20),
+
+          _label('Bio'),
+          const SizedBox(height: 8),
+          _textField(
+            controller: _bioController,
+            hint: 'A short personal signature…',
+            icon: Icons.edit_note_rounded,
+            maxLines: 3,
           ),
           const SizedBox(height: 28),
 
@@ -305,6 +345,33 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           color: p.text,
         ),
       );
+
+  Widget _textField({
+    required TextEditingController controller,
+    required String hint,
+    required IconData icon,
+    TextInputType? keyboardType,
+    int maxLines = 1,
+  }) {
+    return TextField(
+      controller: controller,
+      keyboardType: keyboardType,
+      maxLines: maxLines,
+      style: TextStyle(color: p.text, fontWeight: FontWeight.w600),
+      decoration: InputDecoration(
+        hintText: hint,
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+        prefixIcon: Icon(icon, color: p.primary),
+      ),
+    );
+  }
 
   Widget _catSelector() {
     return GridView.count(

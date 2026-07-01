@@ -6,7 +6,9 @@ import 'package:pawquest/services/forum_service.dart';
 import 'package:pawquest/providers/theme_provider.dart';
 import 'package:pawquest/theme/app_palette.dart';
 import 'post_detail_screen.dart';
+import 'user_profile_screen.dart';
 import '../widgets/user_avatar.dart';
+import '../widgets/user_name.dart';
 
 class CommunityScreen extends StatelessWidget {
   CommunityScreen({super.key});
@@ -181,6 +183,16 @@ class _PostCard extends StatelessWidget {
   final ForumService forum;
   final AppPalette p;
 
+  void _openProfile(BuildContext context) {
+    final aid = postData['authorId'] as String?;
+    if (aid != null && aid.isNotEmpty) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => UserProfileScreen(userId: aid)),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isAuthor = currentUid != null && currentUid == postData['authorId'];
@@ -216,7 +228,6 @@ class _PostCard extends StatelessWidget {
               ),
             ),
           ),
-          onLongPress: isAuthor ? () => _confirmDelete(context) : null,
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -224,19 +235,28 @@ class _PostCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    UserAvatar(
-                      userId: postData['authorId'] as String?,
-                      fallbackName: author,
-                      radius: 16,
+                    GestureDetector(
+                      onTap: () => _openProfile(context),
+                      child: UserAvatar(
+                        userId: postData['authorId'] as String?,
+                        fallbackName: author,
+                        radius: 16,
+                      ),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: Text(
-                        author,
-                        style: TextStyle(
-                          fontSize: 15,
-                          color: p.text,
-                          fontWeight: FontWeight.w700,
+                      child: GestureDetector(
+                        onTap: () => _openProfile(context),
+                        child: UserName(
+                          userId: postData['authorId'] as String?,
+                          fallback: author,
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: p.text,
+                            fontWeight: FontWeight.w700,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ),
@@ -246,6 +266,17 @@ class _PostCard extends StatelessWidget {
                           fontSize: 12,
                           color: p.text.withValues(alpha: 0.45)),
                     ),
+                    if (isAuthor)
+                      InkWell(
+                        onTap: () => _confirmDelete(context),
+                        borderRadius: BorderRadius.circular(20),
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 8),
+                          child: Icon(Icons.delete_outline,
+                              size: 20,
+                              color: p.text.withValues(alpha: 0.4)),
+                        ),
+                      ),
                   ],
                 ),
                 const SizedBox(height: 10),
