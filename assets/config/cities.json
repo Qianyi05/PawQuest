@@ -4,8 +4,8 @@
     "badge": "0Como.png",
     "order": 0,
     "stepRequired": 0,
-    "x": 400,
-    "y": 210,
+    "mapX": 0.47,
+    "mapY": 0.22,
     "backgroundAsset": "assets/images/backgrounds/city0.jpeg"
   },
   {
@@ -13,8 +13,8 @@
     "badge": "1Milan.png",
     "order": 1,
     "stepRequired": 1000,
-    "x": 400,
-    "y": 250,
+    "mapX": 0.48,
+    "mapY": 0.285,
     "backgroundAsset": "assets/images/backgrounds/city1.jpeg"
   },
   {
@@ -22,8 +22,8 @@
     "badge": "2Turin.png",
     "order": 2,
     "stepRequired": 4000,
-    "x": 200,
-    "y": 250,
+    "mapX": 0.28,
+    "mapY": 0.285,
     "backgroundAsset": "assets/images/backgrounds/city2.jpeg"
   },
   {
@@ -31,8 +31,8 @@
     "badge": "3Genova.png",
     "order": 3,
     "stepRequired": 6000,
-    "x": 250,
-    "y": 400,
+    "mapX": 0.34,
+    "mapY": 0.365,
     "backgroundAsset": "assets/images/backgrounds/city3.jpeg"
   },
   {
@@ -40,8 +40,8 @@
     "badge": "4Pisa.png",
     "order": 4,
     "stepRequired": 10000,
-    "x": 270,
-    "y": 300,
+    "mapX": 0.38,
+    "mapY": 0.43,
     "backgroundAsset": "assets/images/backgrounds/city4.jpeg"
   },
   {
@@ -49,8 +49,8 @@
     "badge": "5Venice.png",
     "order": 5,
     "stepRequired": 12000,
-    "x": 800,
-    "y": 280,
+    "mapX": 0.69,
+    "mapY": 0.315,
     "backgroundAsset": "assets/images/backgrounds/city5.jpeg"
   },
   {
@@ -58,8 +58,8 @@
     "badge": "6Florence.png",
     "order": 6,
     "stepRequired": 14000,
-    "x": 290,
-    "y": 300,
+    "mapX": 0.46,
+    "mapY": 0.44,
     "backgroundAsset": "assets/images/backgrounds/city6.jpeg"
   },
   {
@@ -67,8 +67,8 @@
     "badge": "7Bologna.png",
     "order": 7,
     "stepRequired": 18000,
-    "x": 320,
-    "y": 250,
+    "mapX": 0.52,
+    "mapY": 0.39,
     "backgroundAsset": "assets/images/backgrounds/city7.jpeg"
   },
   {
@@ -76,8 +76,8 @@
     "badge": "8SanMarino.png",
     "order": 8,
     "stepRequired": 22000,
-    "x": 400,
-    "y": 290,
+    "mapX": 0.58,
+    "mapY": 0.47,
     "backgroundAsset": "assets/images/backgrounds/city8.jpeg"
   },
   {
@@ -85,8 +85,8 @@
     "badge": "9Roma.png",
     "order": 9,
     "stepRequired": 26000,
-    "x": 290,
-    "y": 550,
+    "mapX": 0.45,
+    "mapY": 0.55,
     "backgroundAsset": "assets/images/backgrounds/city9.jpeg"
   },
 
@@ -95,8 +95,8 @@
     "badge": "10Abruzzo.png",
     "order": 10,
     "stepRequired": 33000,
-    "x": 400,
-    "y":560,
+    "mapX": 0.57,
+    "mapY": 0.54,
     "backgroundAsset": "assets/images/backgrounds/city10.jpeg"
   },
   {
@@ -104,8 +104,8 @@
     "badge": "11Naples.png",
     "order": 11,
     "stepRequired": 37000,
-    "x": 400,
-    "y": 700,
+    "mapX": 0.57,
+    "mapY": 0.68,
     "backgroundAsset": "assets/images/backgrounds/city11.jpeg"
   },
   {
@@ -113,8 +113,8 @@
     "badge": "12Caserta.png",
     "order": 12,
     "stepRequired": 39000,
-    "x": 450,
-    "y": 680,
+    "mapX": 0.54,
+    "mapY": 0.645,
     "backgroundAsset": "assets/images/backgrounds/city12.jpeg"
   },
   {
@@ -122,8 +122,8 @@
     "badge": "13AmalfiCoast.png",
     "order": 13,
     "stepRequired": 45000,
-    "x": 450,
-    "y": 760,
+    "mapX": 0.61,
+    "mapY": 0.705,
     "backgroundAsset": "assets/images/backgrounds/city13.jpeg"
   },
   {
@@ -131,8 +131,8 @@
     "badge": "14Sicily.png",
     "order": 14,
     "stepRequired": 60000,
-    "x": 290,
-    "y": 800,
+    "mapX": 0.35,
+    "mapY": 0.84,
     "backgroundAsset": "assets/images/backgrounds/city14.jpeg"
   },
   {
@@ -140,8 +140,8 @@
     "badge": "15Sardegna.png",
     "order": 15,
     "stepRequired": 70000,
-    "x": 200,
-    "y": 650,
+    "mapX": 0.22,
+    "mapY": 0.67,
     "backgroundAsset": "assets/images/backgrounds/city15.jpeg"
   }
 

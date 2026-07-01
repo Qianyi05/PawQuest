@@ -4,6 +4,7 @@ import '../providers/step_provider.dart';
 import '../providers/theme_provider.dart';
 import '../theme/app_palette.dart';
 import '../services/route_manager.dart';
+import '../utils/map_coordinates.dart';
 import 'city_detail_screen.dart';
 import 'responsive_main_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -60,7 +61,14 @@ class WorldMapScreen extends StatefulWidget {
 }
 
 class _WorldMapScreenState extends State<WorldMapScreen> {
+  static const _mapSourceSize = Size(1024, 1536);
+  static const _badgeSize = 40.0;
+  static const _minScale = 1.0;
+  static const _maxScale = 4.0;
+
+  final TransformationController _mapController = TransformationController();
   List<Map<String, dynamic>> unlockedCities = [];
+  Size _viewportSize = Size.zero;
 
   @override
   void initState() {
@@ -77,158 +85,82 @@ class _WorldMapScreenState extends State<WorldMapScreen> {
   }
 
   @override
+  void dispose() {
+    _mapController.dispose();
+    super.dispose();
+  }
+
+  void _zoomBy(double factor) {
+    final currentScale = _mapController.value.getMaxScaleOnAxis();
+    final targetScale =
+        (currentScale * factor).clamp(_minScale, _maxScale).toDouble();
+    final center = _viewportSize.center(Offset.zero);
+
+    _mapController.value = Matrix4.identity()
+      ..translate(center.dx, center.dy)
+      ..scale(targetScale)
+      ..translate(-center.dx, -center.dy);
+  }
+
+  void _resetZoom() {
+    _mapController.value = Matrix4.identity();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final p = context.watch<ThemeProvider>().palette;
 
     return Scaffold(
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final mapWidth = constraints.maxWidth;
-          final mapHeight = constraints.maxHeight;
-          const sourceSize = Size(1024, 1536);
-          final fitted = applyBoxFit(
-            BoxFit.cover,
-            sourceSize,
-            Size(mapWidth, mapHeight),
+          final viewportSize = Size(
+            constraints.maxWidth,
+            constraints.maxHeight,
           );
-          final renderedSize = fitted.destination;
-          final imageOffset = Offset(
-            (mapWidth - renderedSize.width) / 2,
-            (mapHeight - renderedSize.height) / 2,
-          );
+          _viewportSize = viewportSize;
           return Stack(
             children: [
-              /// 背景地图
               Positioned.fill(
-                child: Image.asset(
-                  'assets/images/Italymap.png',
-                  fit: BoxFit.cover,
+                child: InteractiveViewer(
+                  transformationController: _mapController,
+                  minScale: _minScale,
+                  maxScale: _maxScale,
+                  panEnabled: true,
+                  scaleEnabled: true,
+                  clipBehavior: Clip.hardEdge,
+                  child: Stack(
+                    children: [
+                      /// 背景地图
+                      Positioned.fill(
+                        child: Image.asset(
+                          'assets/images/Italymap.png',
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+
+                      /// 城市徽章标记
+                      ...unlockedCities.map((city) {
+                        final point = normalizedMapPointInCover(
+                          normalizedPoint: Offset(
+                            (city['mapX'] as num).toDouble(),
+                            (city['mapY'] as num).toDouble(),
+                          ),
+                          sourceSize: _mapSourceSize,
+                          viewportSize: viewportSize,
+                        );
+
+                        return _cityBadge(city, point, p);
+                      }),
+                    ],
+                  ),
                 ),
               ),
 
-              /// 城市徽章标记
-              ...unlockedCities.map((city) {
-                final x =
-                    imageOffset.dx + city['x'] / 1000 * renderedSize.width;
-                final y =
-                    imageOffset.dy + city['y'] / 1000 * renderedSize.height;
-
-                return Positioned(
-                  left: x,
-                  top: y,
-                  child: GestureDetector(
-                    onTap: () {
-                      showGeneralDialog(
-                        context: context,
-                        barrierDismissible: true,
-                        barrierLabel: '',
-                        barrierColor:
-                            Colors.black.withValues(alpha: 0.2), // 半透明背景
-                        pageBuilder: (_, __, ___) => const SizedBox(),
-                        transitionBuilder: (_, anim, __, child) {
-                          return Transform.scale(
-                            scale: anim.value,
-                            child: Opacity(
-                              opacity: anim.value,
-                              child: Center(
-                                child: Container(
-                                  width: 320,
-                                  padding:
-                                      const EdgeInsets.fromLTRB(28, 26, 28, 24),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(32),
-                                    boxShadow: const [
-                                      BoxShadow(
-                                        color: Colors.black26,
-                                        blurRadius: 24,
-                                        offset: Offset(0, 10),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(Icons.celebration_rounded,
-                                              size: 18, color: p.primary),
-                                          const SizedBox(width: 6),
-                                          Text(
-                                            "NEW CITY UNLOCKED",
-                                            style: GoogleFonts.baloo2(
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w700,
-                                              color: p.primary,
-                                              letterSpacing: 1.2,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 10),
-                                      Text(
-                                        city['name'],
-                                        textAlign: TextAlign.center,
-                                        style: GoogleFonts.baloo2(
-                                          fontSize: 30,
-                                          fontWeight: FontWeight.bold,
-                                          color: p.text,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 18),
-
-                                      // 🔥 勋章图案
-                                      Container(
-                                        padding: const EdgeInsets.all(14),
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color:
-                                              p.accent.withValues(alpha: 0.25),
-                                        ),
-                                        child: Image.asset(
-                                          'assets/images/badges/${city['badge']}',
-                                          width: 170,
-                                        ),
-                                      ),
-
-                                      const SizedBox(height: 22),
-
-                                      roundedButton(
-                                        p: p,
-                                        label: 'View details',
-                                        onPressed: () {
-                                          Navigator.of(context).pop();
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (_) => CityDetailScreen(
-                                                cityName: city['name'],
-                                                badgeImagePath:
-                                                    'assets/images/badges/${city['badge']}',
-                                                stepRequired:
-                                                    city['stepRequired'],
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      );
-                    },
-                    child: Image.asset(
-                      'assets/images/badges/${city['badge']}',
-                      width: 40,
-                    ),
-                  ),
-                );
-              }).toList(),
+              Positioned(
+                top: MediaQuery.paddingOf(context).top + 12,
+                right: 14,
+                child: _zoomControls(p),
+              ),
 
               /// 底部按钮组
               Positioned(
@@ -272,6 +204,152 @@ class _WorldMapScreenState extends State<WorldMapScreen> {
             ],
           );
         },
+      ),
+    );
+  }
+
+  Widget _cityBadge(Map<String, dynamic> city, Offset point, AppPalette p) {
+    return Positioned(
+      left: point.dx - _badgeSize / 2,
+      top: point.dy - _badgeSize / 2,
+      child: GestureDetector(
+        onTap: () {
+          showGeneralDialog(
+            context: context,
+            barrierDismissible: true,
+            barrierLabel: '',
+            barrierColor: Colors.black.withValues(alpha: 0.2), // 半透明背景
+            pageBuilder: (_, __, ___) => const SizedBox(),
+            transitionBuilder: (_, anim, __, child) {
+              return Transform.scale(
+                scale: anim.value,
+                child: Opacity(
+                  opacity: anim.value,
+                  child: Center(
+                    child: Container(
+                      width: 320,
+                      padding: const EdgeInsets.fromLTRB(28, 26, 28, 24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(32),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black26,
+                            blurRadius: 24,
+                            offset: Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.celebration_rounded,
+                                  size: 18, color: p.primary),
+                              const SizedBox(width: 6),
+                              Text(
+                                "NEW CITY UNLOCKED",
+                                style: GoogleFonts.baloo2(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: p.primary,
+                                  letterSpacing: 1.2,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            city['name'],
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.baloo2(
+                              fontSize: 30,
+                              fontWeight: FontWeight.bold,
+                              color: p.text,
+                            ),
+                          ),
+                          const SizedBox(height: 18),
+
+                          // 🔥 勋章图案
+                          Container(
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: p.accent.withValues(alpha: 0.25),
+                            ),
+                            child: Image.asset(
+                              'assets/images/badges/${city['badge']}',
+                              width: 170,
+                            ),
+                          ),
+
+                          const SizedBox(height: 22),
+
+                          roundedButton(
+                            p: p,
+                            label: 'View details',
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => CityDetailScreen(
+                                    cityName: city['name'],
+                                    badgeImagePath:
+                                        'assets/images/badges/${city['badge']}',
+                                    stepRequired: city['stepRequired'],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          );
+        },
+        child: Image.asset(
+          'assets/images/badges/${city['badge']}',
+          width: _badgeSize,
+          height: _badgeSize,
+          fit: BoxFit.contain,
+        ),
+      ),
+    );
+  }
+
+  Widget _zoomControls(AppPalette p) {
+    return Material(
+      color: Colors.white.withValues(alpha: 0.92),
+      elevation: 4,
+      borderRadius: BorderRadius.circular(16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            tooltip: 'Zoom in',
+            onPressed: () => _zoomBy(1.4),
+            icon: Icon(Icons.add_rounded, color: p.text),
+          ),
+          Container(width: 28, height: 1, color: Colors.black12),
+          IconButton(
+            tooltip: 'Zoom out',
+            onPressed: () => _zoomBy(1 / 1.4),
+            icon: Icon(Icons.remove_rounded, color: p.text),
+          ),
+          Container(width: 28, height: 1, color: Colors.black12),
+          IconButton(
+            tooltip: 'Reset map',
+            onPressed: _resetZoom,
+            icon: Icon(Icons.center_focus_strong_rounded, color: p.primary),
+          ),
+        ],
       ),
     );
   }

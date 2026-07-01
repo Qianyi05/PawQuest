@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/services.dart';
 
 typedef CityUnlockedCallback = void Function(String cityName, String? badgeUrl);
 
@@ -19,6 +22,13 @@ class RouteManager {
   /// 加载当前用户已解锁的所有城市（根据步数）
   Future<List<Map<String, dynamic>>> loadUnlockedCities(
       int currentSteps) async {
+    final configJson = await rootBundle.loadString('assets/config/cities.json');
+    final configuredCities =
+        (jsonDecode(configJson) as List).cast<Map<String, dynamic>>();
+    final positionsByName = {
+      for (final city in configuredCities) city['name'] as String: city,
+    };
+
     final snapshot = await FirebaseFirestore.instance
         .collection('cities')
         .orderBy('order')
@@ -29,13 +39,15 @@ class RouteManager {
     for (final doc in snapshot.docs) {
       final data = doc.data();
       if (data['stepRequired'] <= currentSteps) {
+        final configured = positionsByName[data['name']];
+        if (configured == null) continue;
         unlocked.add({
           'name': data['name'],
           'stepRequired': data['stepRequired'],
           'badge': data['badge'],
           'order': data['order'],
-          'x': data['x'], // Firestore 中设定的 number 类型
-          'y': data['y'],
+          'mapX': configured['mapX'],
+          'mapY': configured['mapY'],
         });
       }
     }
