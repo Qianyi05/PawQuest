@@ -41,4 +41,40 @@ void main() {
     expect(weather.latitude, 41.9028);
     expect(weather.longitude, 12.4964);
   });
+
+  test('throws a readable error when the API key is missing', () async {
+    dotenv.testLoad(fileInput: 'OPENWEATHER_API_KEY=');
+    final service = WeatherService(
+      client: MockClient((_) async => http.Response('{}', 200)),
+    );
+
+    expect(
+      () => service.fetchWeatherByCoordinates(latitude: 0, longitude: 0),
+      throwsA(
+        isA<WeatherException>().having(
+          (error) => error.message,
+          'message',
+          contains('API key is missing'),
+        ),
+      ),
+    );
+  });
+
+  test('throws the HTTP status when OpenWeather rejects the request', () async {
+    dotenv.testLoad(fileInput: 'OPENWEATHER_API_KEY=test-key');
+    final service = WeatherService(
+      client: MockClient((_) async => http.Response('{}', 401)),
+    );
+
+    expect(
+      () => service.fetchWeatherByCoordinates(latitude: 0, longitude: 0),
+      throwsA(
+        isA<WeatherException>().having(
+          (error) => error.message,
+          'message',
+          contains('401'),
+        ),
+      ),
+    );
+  });
 }

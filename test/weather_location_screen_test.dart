@@ -46,4 +46,27 @@ void main() {
     expect(submittedLatitude, 41.9028);
     expect(submittedLongitude, 12.4964);
   });
+
+  testWidgets('switches back to device location', (tester) async {
+    var deviceLocationRequested = false;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: WeatherLocationScreen(
+          palette: AppPalette.all.first,
+          initialLatitude: 41.9028,
+          initialLongitude: 12.4964,
+          onCoordinatesSubmitted: (_, __) async {},
+          onDeviceLocationRequested: () async {
+            deviceLocationRequested = true;
+          },
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Use device location'));
+    await tester.pumpAndSettle();
+
+    expect(deviceLocationRequested, isTrue);
+  });
 }
