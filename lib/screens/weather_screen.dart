@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/daily_quest_provider.dart';
 import '../providers/step_provider.dart';
 import '../providers/theme_provider.dart';
-import '../theme/app_palette.dart';
+import 'weather_location_screen.dart';
 
 class WeatherScreen extends StatefulWidget {
   const WeatherScreen({super.key});
@@ -35,6 +35,15 @@ class _WeatherScreenState extends State<WeatherScreen> {
       backgroundColor: p.background,
       appBar: AppBar(
         backgroundColor: p.accent,
+        leading: IconButton(
+          tooltip: 'Change weather location',
+          icon: const Icon(Icons.edit_location_alt_rounded),
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const WeatherLocationScreen(),
+            ),
+          ),
+        ),
         title: const Text('Weather Quest'),
         actions: [
           IconButton(

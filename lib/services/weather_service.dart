@@ -13,6 +13,16 @@ class WeatherService {
 
   Future<WeatherModel> fetchCurrentWeather() async {
     final position = await _getCurrentPosition();
+    return fetchWeatherByCoordinates(
+      latitude: position.latitude,
+      longitude: position.longitude,
+    );
+  }
+
+  Future<WeatherModel> fetchWeatherByCoordinates({
+    required double latitude,
+    required double longitude,
+  }) async {
     final apiKey = dotenv.env['OPENWEATHER_API_KEY'] ?? '';
 
     if (apiKey.isEmpty || apiKey == 'your_api_key_here') {
@@ -22,8 +32,8 @@ class WeatherService {
     }
 
     final uri = Uri.https('api.openweathermap.org', '/data/2.5/weather', {
-      'lat': position.latitude.toString(),
-      'lon': position.longitude.toString(),
+      'lat': latitude.toString(),
+      'lon': longitude.toString(),
       'appid': apiKey,
       'units': 'metric',
     });
@@ -36,8 +46,8 @@ class WeatherService {
     final json = jsonDecode(response.body) as Map<String, dynamic>;
     return WeatherModel.fromJson(
       json,
-      latitude: position.latitude,
-      longitude: position.longitude,
+      latitude: latitude,
+      longitude: longitude,
     );
   }
 

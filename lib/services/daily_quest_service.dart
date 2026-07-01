@@ -55,6 +55,35 @@ class DailyQuestService {
     return quest;
   }
 
+  Future<DailyQuestModel> replaceTodayQuest({
+    required int currentSteps,
+    required WeatherModel weather,
+  }) async {
+    final uid = _auth.currentUser?.uid;
+    final date = todayKey();
+    var rewardClaimed = false;
+
+    DocumentReference<Map<String, dynamic>>? docRef;
+    if (uid != null) {
+      docRef = _firestore
+          .collection('users')
+          .doc(uid)
+          .collection('dailyQuests')
+          .doc(date);
+      final existing = await docRef.get();
+      rewardClaimed = existing.data()?['rewardClaimed'] == true;
+    }
+
+    final quest = _buildQuestFromWeather(
+      date: date,
+      currentSteps: currentSteps,
+      weather: weather,
+      rewardClaimed: rewardClaimed,
+    );
+    await docRef?.set(quest.toFirestore());
+    return quest;
+  }
+
   Future<DailyQuestModel> updateTodayProgress(
     int currentSteps, {
     DailyQuestModel? existingQuest,
@@ -116,6 +145,23 @@ class DailyQuestService {
     required int currentSteps,
     WeatherModel? weather,
     String? locationName,
+    bool rewardClaimed = false,
+  }) {
+    return buildQuestForWeather(
+      date: date,
+      currentSteps: currentSteps,
+      weather: weather,
+      locationName: locationName,
+      rewardClaimed: rewardClaimed,
+    );
+  }
+
+  static DailyQuestModel buildQuestForWeather({
+    required String date,
+    required int currentSteps,
+    WeatherModel? weather,
+    String? locationName,
+    bool rewardClaimed = false,
   }) {
     final temperature = weather?.temperature ?? 0;
     final weatherMain = weather?.weatherMain ?? 'Default';
@@ -126,7 +172,7 @@ class DailyQuestService {
       goalSteps: quest.goalSteps,
       currentSteps: currentSteps,
       completed: currentSteps >= quest.goalSteps,
-      rewardClaimed: false,
+      rewardClaimed: rewardClaimed,
       questTitle: quest.title,
       questDescription: quest.description,
       weatherMain: weatherMain,
@@ -135,7 +181,7 @@ class DailyQuestService {
     );
   }
 
-  _QuestRule _questRule(String weatherMain, double temperature) {
+  static _QuestRule _questRule(String weatherMain, double temperature) {
     if (temperature >= 30) {
       return const _QuestRule(
         goalSteps: 3000,

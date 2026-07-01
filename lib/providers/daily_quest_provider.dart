@@ -19,12 +19,18 @@ class DailyQuestProvider with ChangeNotifier {
   WeatherModel? _weather;
   bool _isLoading = false;
   String? _errorMessage;
+  double? _manualLatitude;
+  double? _manualLongitude;
 
   DailyQuestModel? get quest => _quest;
   WeatherModel? get weather => _weather;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   bool get hasError => _errorMessage != null;
+  bool get usesManualLocation =>
+      _manualLatitude != null && _manualLongitude != null;
+  double? get manualLatitude => _manualLatitude;
+  double? get manualLongitude => _manualLongitude;
 
   Future<void> loadTodayQuest(int currentSteps) async {
     _setLoading(true);
@@ -33,7 +39,7 @@ class DailyQuestProvider with ChangeNotifier {
       String? weatherError;
 
       try {
-        weather = await _weatherService.fetchCurrentWeather();
+        weather = await _fetchSelectedWeather();
       } catch (error) {
         weatherError = error.toString();
       }
@@ -56,6 +62,61 @@ class DailyQuestProvider with ChangeNotifier {
 
   Future<void> refresh(int currentSteps) async {
     await loadTodayQuest(currentSteps);
+  }
+
+  Future<void> useManualLocation({
+    required double latitude,
+    required double longitude,
+    required int currentSteps,
+  }) async {
+    await _changeLocation(
+      latitude: latitude,
+      longitude: longitude,
+      currentSteps: currentSteps,
+    );
+  }
+
+  Future<void> useDeviceLocation({required int currentSteps}) async {
+    await _changeLocation(currentSteps: currentSteps);
+  }
+
+  Future<void> _changeLocation({
+    double? latitude,
+    double? longitude,
+    required int currentSteps,
+  }) async {
+    _setLoading(true);
+    try {
+      final weather = latitude == null || longitude == null
+          ? await _weatherService.fetchCurrentWeather()
+          : await _weatherService.fetchWeatherByCoordinates(
+              latitude: latitude,
+              longitude: longitude,
+            );
+      _manualLatitude = latitude;
+      _manualLongitude = longitude;
+      _weather = weather;
+      _quest = await _dailyQuestService.replaceTodayQuest(
+        currentSteps: currentSteps,
+        weather: weather,
+      );
+      _errorMessage = null;
+    } catch (error) {
+      _errorMessage = error.toString();
+      rethrow;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<WeatherModel> _fetchSelectedWeather() {
+    if (usesManualLocation) {
+      return _weatherService.fetchWeatherByCoordinates(
+        latitude: _manualLatitude!,
+        longitude: _manualLongitude!,
+      );
+    }
+    return _weatherService.fetchCurrentWeather();
   }
 
   Future<void> syncSteps(int currentSteps) async {
