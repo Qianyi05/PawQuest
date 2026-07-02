@@ -238,22 +238,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return SizedBox(
       width: double.infinity,
       height: 52,
-      child: ElevatedButton(
+      child: TextButton(
         onPressed: _isLoading ? null : onTap,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: p.primary,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        style: TextButton.styleFrom(
+          foregroundColor: p.primary,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18)),
+          textStyle: const TextStyle(
+              fontSize: 17, fontWeight: FontWeight.w700, letterSpacing: 0.3),
         ),
         child: _isLoading
-            ? const SizedBox(
+            ? SizedBox(
                 width: 22,
                 height: 22,
                 child: CircularProgressIndicator(
-                    strokeWidth: 2.5, color: Colors.white),
+                    strokeWidth: 2.5, color: p.primary),
               )
             : Text(label),
       ),

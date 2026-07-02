@@ -148,15 +148,13 @@ class _SplashScreenState extends State<SplashScreen>
     return SizedBox(
       width: width ?? MediaQuery.of(context).size.width * 0.5,
       height: 50,
-      child: ElevatedButton(
+      child: TextButton(
         onPressed: onTap,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: p.accent,
+        style: TextButton.styleFrom(
           foregroundColor: p.text,
           shape: const StadiumBorder(),
-          elevation: 3,
-          shadowColor: Colors.black26,
-          textStyle: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+          textStyle: const TextStyle(
+              fontSize: 17, fontWeight: FontWeight.w700, letterSpacing: 0.5),
         ),
         child: Text(label),
       ),
