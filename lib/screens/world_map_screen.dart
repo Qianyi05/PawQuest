@@ -4,7 +4,6 @@ import '../providers/step_provider.dart';
 import '../providers/theme_provider.dart';
 import '../theme/app_palette.dart';
 import '../services/route_manager.dart';
-import '../utils/map_coordinates.dart';
 import 'city_detail_screen.dart';
 import 'responsive_main_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -63,12 +62,10 @@ class WorldMapScreen extends StatefulWidget {
 class _WorldMapScreenState extends State<WorldMapScreen> {
   static const _mapSourceSize = Size(1024, 1536);
   static const _badgeSize = 40.0;
-  static const _minScale = 1.0;
-  static const _maxScale = 4.0;
 
   final TransformationController _mapController = TransformationController();
   List<Map<String, dynamic>> unlockedCities = [];
-  Size _viewportSize = Size.zero;
+  Size? _configuredViewport;
 
   @override
   void initState() {
@@ -90,20 +87,21 @@ class _WorldMapScreenState extends State<WorldMapScreen> {
     super.dispose();
   }
 
-  void _zoomBy(double factor) {
-    final currentScale = _mapController.value.getMaxScaleOnAxis();
-    final targetScale =
-        (currentScale * factor).clamp(_minScale, _maxScale).toDouble();
-    final center = _viewportSize.center(Offset.zero);
+  void _configureInitialView(Size viewportSize, double coverScale) {
+    if (_configuredViewport == viewportSize) return;
+    _configuredViewport = viewportSize;
 
-    _mapController.value = Matrix4.identity()
-      ..translate(center.dx, center.dy)
-      ..scale(targetScale)
-      ..translate(-center.dx, -center.dy);
-  }
-
-  void _resetZoom() {
-    _mapController.value = Matrix4.identity();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _configuredViewport != viewportSize) return;
+      final renderedWidth = _mapSourceSize.width * coverScale;
+      final renderedHeight = _mapSourceSize.height * coverScale;
+      _mapController.value = Matrix4.identity()
+        ..translate(
+          (viewportSize.width - renderedWidth) / 2,
+          (viewportSize.height - renderedHeight) / 2,
+        )
+        ..scale(coverScale);
+    });
   }
 
   @override
@@ -117,49 +115,56 @@ class _WorldMapScreenState extends State<WorldMapScreen> {
             constraints.maxWidth,
             constraints.maxHeight,
           );
-          _viewportSize = viewportSize;
+          final widthScale = viewportSize.width / _mapSourceSize.width;
+          final heightScale = viewportSize.height / _mapSourceSize.height;
+          final containScale =
+              widthScale < heightScale ? widthScale : heightScale;
+          final coverScale =
+              widthScale > heightScale ? widthScale : heightScale;
+          _configureInitialView(viewportSize, coverScale);
+
           return Stack(
             children: [
               Positioned.fill(
-                child: InteractiveViewer(
-                  transformationController: _mapController,
-                  minScale: _minScale,
-                  maxScale: _maxScale,
-                  panEnabled: true,
-                  scaleEnabled: true,
-                  clipBehavior: Clip.hardEdge,
-                  child: Stack(
-                    children: [
-                      /// 背景地图
-                      Positioned.fill(
-                        child: Image.asset(
-                          'assets/images/Italymap.png',
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-
-                      /// 城市徽章标记
-                      ...unlockedCities.map((city) {
-                        final point = normalizedMapPointInCover(
-                          normalizedPoint: Offset(
-                            (city['mapX'] as num).toDouble(),
-                            (city['mapY'] as num).toDouble(),
+                child: ColoredBox(
+                  color: const Color(0xFF62C6D2),
+                  child: InteractiveViewer(
+                    transformationController: _mapController,
+                    constrained: false,
+                    alignment: Alignment.topLeft,
+                    boundaryMargin: const EdgeInsets.all(2000),
+                    minScale: containScale,
+                    maxScale: coverScale * 4,
+                    panEnabled: true,
+                    scaleEnabled: true,
+                    trackpadScrollCausesScale: true,
+                    scaleFactor: 160,
+                    clipBehavior: Clip.hardEdge,
+                    child: SizedBox(
+                      width: _mapSourceSize.width,
+                      height: _mapSourceSize.height,
+                      child: Stack(
+                        children: [
+                          Positioned.fill(
+                            child: Image.asset(
+                              'assets/images/Italymap.png',
+                              fit: BoxFit.fill,
+                            ),
                           ),
-                          sourceSize: _mapSourceSize,
-                          viewportSize: viewportSize,
-                        );
-
-                        return _cityBadge(city, point, p);
-                      }),
-                    ],
+                          ...unlockedCities.map((city) {
+                            final point = Offset(
+                              (city['mapX'] as num).toDouble() *
+                                  _mapSourceSize.width,
+                              (city['mapY'] as num).toDouble() *
+                                  _mapSourceSize.height,
+                            );
+                            return _cityBadge(city, point, p);
+                          }),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-              ),
-
-              Positioned(
-                top: MediaQuery.paddingOf(context).top + 12,
-                right: 14,
-                child: _zoomControls(p),
               ),
 
               /// 底部按钮组
@@ -320,36 +325,6 @@ class _WorldMapScreenState extends State<WorldMapScreen> {
           height: _badgeSize,
           fit: BoxFit.contain,
         ),
-      ),
-    );
-  }
-
-  Widget _zoomControls(AppPalette p) {
-    return Material(
-      color: Colors.white.withValues(alpha: 0.92),
-      elevation: 4,
-      borderRadius: BorderRadius.circular(16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          IconButton(
-            tooltip: 'Zoom in',
-            onPressed: () => _zoomBy(1.4),
-            icon: Icon(Icons.add_rounded, color: p.text),
-          ),
-          Container(width: 28, height: 1, color: Colors.black12),
-          IconButton(
-            tooltip: 'Zoom out',
-            onPressed: () => _zoomBy(1 / 1.4),
-            icon: Icon(Icons.remove_rounded, color: p.text),
-          ),
-          Container(width: 28, height: 1, color: Colors.black12),
-          IconButton(
-            tooltip: 'Reset map',
-            onPressed: _resetZoom,
-            icon: Icon(Icons.center_focus_strong_rounded, color: p.primary),
-          ),
-        ],
       ),
     );
   }
