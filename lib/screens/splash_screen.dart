@@ -47,8 +47,8 @@ class _SplashScreenState extends State<SplashScreen>
   Widget build(BuildContext context) {
     p = context.watch<ThemeProvider>().palette;
     final size = MediaQuery.sizeOf(context);
-    final useLandscapeTabletLayout =
-        size.shortestSide >= 600 && size.width > size.height;
+    final isTablet = size.shortestSide >= 600;
+    final useLandscapeTabletLayout = isTablet && size.width > size.height;
 
     return Scaffold(
       // 给深色背景，避免看起来像“白屏”
@@ -68,20 +68,31 @@ class _SplashScreenState extends State<SplashScreen>
                   ),
                   // 底部按钮：按屏幕宽度比例定位，紧贴背景里鱼/饼干图标的右侧
                   Align(
-                    alignment: Alignment.bottomLeft,
+                    alignment: isTablet
+                        ? Alignment.bottomCenter
+                        : Alignment.bottomLeft,
                     child: Padding(
                       padding: EdgeInsets.only(
-                          left: MediaQuery.of(context).size.width * 0.32,
-                          bottom: 110),
+                        left: isTablet ? 0 : size.width * 0.32,
+                        bottom: 110,
+                      ),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: isTablet
+                            ? CrossAxisAlignment.center
+                            : CrossAxisAlignment.start,
                         children: [
                           _welcomeButton(
-                              'Login', () => _goTo(const LoginScreen())),
+                            'Login',
+                            () => _goTo(const LoginScreen()),
+                            width: isTablet ? 420 : null,
+                          ),
                           const SizedBox(height: 14),
                           _welcomeButton(
-                              'Register', () => _goTo(const RegisterScreen())),
+                            'Register',
+                            () => _goTo(const RegisterScreen()),
+                            width: isTablet ? 420 : null,
+                          ),
                         ],
                       ),
                     ),

@@ -16,6 +16,7 @@ class PostDetailScreen extends StatefulWidget {
   final Timestamp timestamp;
   final String? authorId;
   final String? imageUrl;
+  final bool embedded;
 
   const PostDetailScreen({
     super.key,
@@ -25,6 +26,7 @@ class PostDetailScreen extends StatefulWidget {
     required this.timestamp,
     this.authorId,
     this.imageUrl,
+    this.embedded = false,
   });
 
   @override
@@ -128,6 +130,13 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     p = context.watch<ThemeProvider>().palette;
     final user = FirebaseAuth.instance.currentUser;
 
+    if (widget.embedded) {
+      return ColoredBox(
+        color: p.background,
+        child: _detailBody(user),
+      );
+    }
+
     return Scaffold(
       backgroundColor: p.background,
       appBar: AppBar(
@@ -137,127 +146,130 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: Column(
-        children: [
-          _originalPost(user),
-          // ---------------- Comments ----------------
-          Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('posts')
-                  .doc(widget.postId)
-                  .collection('comments')
-                  .orderBy('timestamp', descending: false)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return Center(
-                      child: CircularProgressIndicator(color: p.primary));
-                }
+      body: _detailBody(user),
+    );
+  }
 
-                final docs = snapshot.data!.docs;
-                if (docs.isEmpty) {
-                  return Center(
+  Widget _detailBody(User? user) {
+    return Column(
+      children: [
+        _originalPost(user),
+        // ---------------- Comments ----------------
+        Expanded(
+          child: StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('posts')
+                .doc(widget.postId)
+                .collection('comments')
+                .orderBy('timestamp', descending: false)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return Center(
+                    child: CircularProgressIndicator(color: p.primary));
+              }
+
+              final docs = snapshot.data!.docs;
+              if (docs.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.chat_bubble_outline_rounded,
+                          size: 44, color: p.textMuted.withValues(alpha: 0.5)),
+                      const SizedBox(height: 8),
+                      Text('No comments yet',
+                          style:
+                              TextStyle(color: p.text.withValues(alpha: 0.7))),
+                      Text('Be the first to say something!',
+                          style: TextStyle(
+                              fontSize: 12,
+                              color: p.text.withValues(alpha: 0.5))),
+                    ],
+                  ),
+                );
+              }
+
+              final topLevel = <QueryDocumentSnapshot>[];
+              final repliesByRoot = <String, List<QueryDocumentSnapshot>>{};
+              for (final d in docs) {
+                final data = d.data() as Map<String, dynamic>;
+                final parentId = data['parentId'] as String?;
+                if (parentId == null) {
+                  topLevel.add(d);
+                } else {
+                  final root = (data['rootId'] as String?) ?? parentId;
+                  repliesByRoot.putIfAbsent(root, () => []).add(d);
+                }
+              }
+
+              return ListView.builder(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                itemCount: topLevel.length,
+                itemBuilder: (context, index) {
+                  final root = topLevel[index];
+                  final replies = repliesByRoot[root.id] ?? const [];
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(18),
+                      boxShadow: const [
+                        BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 5,
+                            offset: Offset(0, 2)),
+                      ],
+                    ),
                     child: Column(
-                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.chat_bubble_outline_rounded,
-                            size: 44, color: p.textMuted.withValues(alpha: 0.5)),
-                        const SizedBox(height: 8),
-                        Text('No comments yet',
-                            style: TextStyle(
-                                color: p.text.withValues(alpha: 0.7))),
-                        Text('Be the first to say something!',
-                            style: TextStyle(
-                                fontSize: 12,
-                                color: p.text.withValues(alpha: 0.5))),
+                        _buildComment(root, user,
+                            isReply: false, rootId: root.id),
+                        for (final reply in replies)
+                          _buildComment(reply, user,
+                              isReply: true, rootId: root.id),
                       ],
                     ),
                   );
-                }
+                },
+              );
+            },
+          ),
+        ),
 
-                final topLevel = <QueryDocumentSnapshot>[];
-                final repliesByRoot =
-                    <String, List<QueryDocumentSnapshot>>{};
-                for (final d in docs) {
-                  final data = d.data() as Map<String, dynamic>;
-                  final parentId = data['parentId'] as String?;
-                  if (parentId == null) {
-                    topLevel.add(d);
-                  } else {
-                    final root = (data['rootId'] as String?) ?? parentId;
-                    repliesByRoot.putIfAbsent(root, () => []).add(d);
-                  }
-                }
-
-                return ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-                  itemCount: topLevel.length,
-                  itemBuilder: (context, index) {
-                    final root = topLevel[index];
-                    final replies = repliesByRoot[root.id] ?? const [];
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 4, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(18),
-                        boxShadow: const [
-                          BoxShadow(
-                              color: Colors.black12,
-                              blurRadius: 5,
-                              offset: Offset(0, 2)),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildComment(root, user,
-                              isReply: false, rootId: root.id),
-                          for (final reply in replies)
-                            _buildComment(reply, user,
-                                isReply: true, rootId: root.id),
-                        ],
-                      ),
-                    );
-                  },
-                );
-              },
+        // ---------------- Reply banner ----------------
+        if (_replyingToId != null)
+          Container(
+            width: double.infinity,
+            color: p.accent.withValues(alpha: 0.3),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                Icon(Icons.reply_rounded, size: 16, color: p.primary),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    'Replying to ${_replyingToName ?? ''}',
+                    style: TextStyle(
+                        fontSize: 13,
+                        color: p.text,
+                        fontWeight: FontWeight.w600),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: _cancelReply,
+                  child: Icon(Icons.close, size: 18, color: p.text),
+                ),
+              ],
             ),
           ),
 
-          // ---------------- Reply banner ----------------
-          if (_replyingToId != null)
-            Container(
-              width: double.infinity,
-              color: p.accent.withValues(alpha: 0.3),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  Icon(Icons.reply_rounded, size: 16, color: p.primary),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      'Replying to ${_replyingToName ?? ''}',
-                      style: TextStyle(
-                          fontSize: 13,
-                          color: p.text,
-                          fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: _cancelReply,
-                    child: Icon(Icons.close, size: 18, color: p.text),
-                  ),
-                ],
-              ),
-            ),
-
-          // ---------------- Input bar ----------------
-          _inputBar(user),
-        ],
-      ),
+        // ---------------- Input bar ----------------
+        _inputBar(user),
+      ],
     );
   }
 
@@ -310,27 +322,35 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           ),
           const SizedBox(height: 12),
           Text(widget.content,
-              style: TextStyle(
-                  color: p.text, fontSize: 15, height: 1.4)),
+              style: TextStyle(color: p.text, fontSize: 15, height: 1.4)),
           if (widget.imageUrl != null && widget.imageUrl!.isNotEmpty) ...[
             const SizedBox(height: 12),
             ClipRRect(
               borderRadius: BorderRadius.circular(14),
-              child: Image.network(
-                widget.imageUrl!,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                loadingBuilder: (context, child, progress) {
-                  if (progress == null) return child;
-                  return Container(
-                    height: 200,
-                    alignment: Alignment.center,
-                    color: p.background,
-                    child: CircularProgressIndicator(
-                        color: p.primary, strokeWidth: 2),
-                  );
-                },
-                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.sizeOf(context).height *
+                      (MediaQuery.orientationOf(context) ==
+                              Orientation.landscape
+                          ? 0.34
+                          : 0.30),
+                ),
+                child: Image.network(
+                  widget.imageUrl!,
+                  width: double.infinity,
+                  fit: BoxFit.contain,
+                  loadingBuilder: (context, child, progress) {
+                    if (progress == null) return child;
+                    return Container(
+                      height: 180,
+                      alignment: Alignment.center,
+                      color: p.background,
+                      child: CircularProgressIndicator(
+                          color: p.primary, strokeWidth: 2),
+                    );
+                  },
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                ),
               ),
             ),
           ],
@@ -344,8 +364,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               final data = snap.data?.data() as Map<String, dynamic>?;
               final liked =
                   data != null && ForumService.isLikedBy(data, user?.uid);
-              final likes =
-                  data != null ? ForumService.likeCount(data) : 0;
+              final likes = data != null ? ForumService.likeCount(data) : 0;
               return Row(
                 children: [
                   IconButton(
@@ -390,13 +409,12 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                   hintText: _replyingToId == null
                       ? 'Start a conversation...'
                       : 'Write a reply...',
-                  hintStyle:
-                      TextStyle(color: p.text.withValues(alpha: 0.4)),
+                  hintStyle: TextStyle(color: p.text.withValues(alpha: 0.4)),
                   filled: true,
                   fillColor: p.background,
                   isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 12),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(24),
                     borderSide: BorderSide.none,
@@ -414,8 +432,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                 onTap: _send,
                 child: const Padding(
                   padding: EdgeInsets.all(11),
-                  child: Icon(Icons.send_rounded,
-                      color: Colors.white, size: 20),
+                  child:
+                      Icon(Icons.send_rounded, color: Colors.white, size: 20),
                 ),
               ),
             ),
@@ -503,15 +521,12 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                     ),
                   ],
                 ),
-                if (isReply &&
-                    replyToName != null &&
-                    replyToName.isNotEmpty)
+                if (isReply && replyToName != null && replyToName.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 2),
                     child: Text(
                       '↳ $replyToName',
-                      style:
-                          TextStyle(fontSize: 12, color: p.textMuted),
+                      style: TextStyle(fontSize: 12, color: p.textMuted),
                     ),
                   ),
                 const SizedBox(height: 4),
@@ -524,8 +539,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                       style: TextButton.styleFrom(
                         padding: EdgeInsets.zero,
                         minimumSize: const Size(0, 28),
-                        tapTargetSize:
-                            MaterialTapTargetSize.shrinkWrap,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
                       onPressed: () => _startReply(
                         commentId: doc.id,

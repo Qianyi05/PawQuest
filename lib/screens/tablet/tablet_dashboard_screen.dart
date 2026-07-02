@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/theme_provider.dart';
-import '../community_screen.dart';
+import '../foodsticker_screen.dart';
 import '../user_screen.dart';
 import '../weather_screen.dart';
 import '../world_map_screen.dart';
 import 'tablet_badge_page.dart';
+import 'tablet_community_page.dart';
 import 'tablet_overview_page.dart';
 
 class TabletDashboardScreen extends StatefulWidget {
@@ -27,8 +28,9 @@ class _TabletDashboardScreenState extends State<TabletDashboardScreen> {
   final List<Widget> _pages = [
     const TabletOverviewPage(),
     const TabletBadgePage(),
+    const FoodStickerScreen(),
     const WeatherScreen(),
-    CommunityScreen(),
+    const TabletCommunityPage(),
     const UserScreen(showBottomNavigation: false),
     const WorldMapScreen(),
   ];
@@ -81,6 +83,11 @@ class _TabletDashboardScreenState extends State<TabletDashboardScreen> {
                   icon: Icon(Icons.emoji_events_outlined),
                   selectedIcon: Icon(Icons.emoji_events),
                   label: Text('Badges'),
+                ),
+                NavigationRailDestination(
+                  icon: Icon(Icons.restaurant_menu_outlined),
+                  selectedIcon: Icon(Icons.restaurant_menu),
+                  label: Text('Food'),
                 ),
                 NavigationRailDestination(
                   icon: Icon(Icons.cloud_outlined),

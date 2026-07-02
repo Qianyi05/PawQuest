@@ -49,3 +49,11 @@ app.*.map.json
 .DS_Store
 *.zip
 flutter_0*.png
+
+# LaTeX build artifacts (keep .tex sources and final .pdf files)
+*.aux
+*.fdb_latexmk
+*.fls
+*.out
+*.synctex.gz
+*.toc
