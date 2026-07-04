@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 
 import '../../providers/daily_quest_provider.dart';
 import '../../providers/step_provider.dart';
-import '../world_map_screen.dart';
 import 'tablet_dashboard_screen.dart';
 
 class TabletOverviewPage extends StatefulWidget {
@@ -391,10 +390,12 @@ class _RouteOverviewCard extends StatelessWidget {
             child: TextButton.icon(
               onPressed: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const WorldMapScreen()),
+                MaterialPageRoute(
+                  builder: (_) => const TabletDashboardScreen(initialIndex: 1),
+                ),
               ),
               icon: const Icon(Icons.open_in_full_rounded),
-              label: const Text('Open full map'),
+              label: const Text('Open badge map'),
             ),
           ),
         ],

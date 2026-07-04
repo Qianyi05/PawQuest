@@ -5,7 +5,6 @@ import '../../providers/theme_provider.dart';
 import '../foodsticker_screen.dart';
 import '../user_screen.dart';
 import '../weather_screen.dart';
-import '../world_map_screen.dart';
 import 'tablet_badge_page.dart';
 import 'tablet_community_page.dart';
 import 'tablet_overview_page.dart';
@@ -32,7 +31,6 @@ class _TabletDashboardScreenState extends State<TabletDashboardScreen> {
     const WeatherScreen(),
     const TabletCommunityPage(),
     const UserScreen(showBottomNavigation: false),
-    const WorldMapScreen(),
   ];
 
   @override
@@ -103,11 +101,6 @@ class _TabletDashboardScreenState extends State<TabletDashboardScreen> {
                   icon: Icon(Icons.person_outline),
                   selectedIcon: Icon(Icons.person),
                   label: Text('Profile'),
-                ),
-                NavigationRailDestination(
-                  icon: Icon(Icons.map_outlined),
-                  selectedIcon: Icon(Icons.map),
-                  label: Text('Map'),
                 ),
               ],
             ),
