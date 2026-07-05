@@ -76,149 +76,177 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           final detail = snap.data;
+          final size = MediaQuery.sizeOf(context);
+          final isTabletLandscape =
+              size.shortestSide >= 600 && size.width > size.height;
+
+          if (isTabletLandscape) {
+            return Padding(
+              padding: const EdgeInsets.all(28),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    flex: 4,
+                    child: Center(child: _buildFoodImage(height: 430)),
+                  ),
+                  const SizedBox(width: 40),
+                  Expanded(
+                    flex: 6,
+                    child: SingleChildScrollView(
+                      child: _buildFoodInformation(detail, p),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Food image card
-                Center(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 10,
-                          offset: Offset(0, 6),
-                        ),
-                      ],
-                    ),
-                    padding: const EdgeInsets.all(12),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(14),
-                      child: Image.asset(
-                        'assets/images/real_food/${widget.filename}',
-                        height: 220,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                  ),
-                ),
+                Center(child: _buildFoodImage(height: 220)),
                 const SizedBox(height: 20),
-
-                // Dish name + city
-                Text(
-                  detail?['dish'] ?? widget.city,
-                  style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                    color: p.text,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(Icons.place, size: 16, color: Colors.redAccent),
-                    const SizedBox(width: 4),
-                    Text(
-                      widget.city,
-                      style: const TextStyle(fontSize: 15, color: Colors.grey),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                // Description
-                Text(
-                  detail?['description'] ??
-                      'No description available for this food yet.',
-                  style: const TextStyle(
-                      fontSize: 16, height: 1.5, color: Colors.black87),
-                ),
-                const SizedBox(height: 24),
-
-                // "Where to try it" card
-                if (detail != null) ...[
-                  Text(
-                    'Where to try it',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: p.text,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFFEEDFc0)),
-                    ),
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.restaurant,
-                                size: 20, color: p.text),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                detail['restaurant'] ?? '',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                  color: p.text,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        if ((detail['address'] ?? '').toString().isNotEmpty) ...[
-                          const SizedBox(height: 6),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 28),
-                            child: Text(
-                              detail['address'],
-                              style: const TextStyle(
-                                  fontSize: 14, color: Colors.grey),
-                            ),
-                          ),
-                        ],
-                        const SizedBox(height: 14),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: p.primary,
-                              foregroundColor: Colors.white,
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            icon: const Icon(Icons.map),
-                            label: const Text('Open in Google Maps'),
-                            onPressed: () => _openInMaps(
-                              detail['mapsQuery'] ??
-                                  '${detail['dish']} ${widget.city}',
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                _buildFoodInformation(detail, p),
               ],
             ),
           );
         },
       ),
+    );
+  }
+
+  Widget _buildFoodImage({required double height}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 10,
+            offset: Offset(0, 6),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(12),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: Image.asset(
+          'assets/images/real_food/${widget.filename}',
+          height: height,
+          fit: BoxFit.contain,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFoodInformation(Map<String, dynamic>? detail, AppPalette p) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          detail?['dish'] ?? widget.city,
+          style: TextStyle(
+            fontSize: 26,
+            fontWeight: FontWeight.bold,
+            color: p.text,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Row(
+          children: [
+            const Icon(Icons.place, size: 16, color: Colors.redAccent),
+            const SizedBox(width: 4),
+            Text(
+              widget.city,
+              style: const TextStyle(fontSize: 15, color: Colors.grey),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Text(
+          detail?['description'] ??
+              'No description available for this food yet.',
+          style: const TextStyle(
+            fontSize: 16,
+            height: 1.5,
+            color: Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 24),
+        if (detail != null) ...[
+          Text(
+            'Where to try it',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: p.text,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFEEDFc0)),
+            ),
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.restaurant, size: 20, color: p.text),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        detail['restaurant'] ?? '',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: p.text,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                if ((detail['address'] ?? '').toString().isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 28),
+                    child: Text(
+                      detail['address'],
+                      style: const TextStyle(fontSize: 14, color: Colors.grey),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 14),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: p.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    icon: const Icon(Icons.map),
+                    label: const Text('Open in Google Maps'),
+                    onPressed: () => _openInMaps(
+                      detail['mapsQuery'] ?? '${detail['dish']} ${widget.city}',
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

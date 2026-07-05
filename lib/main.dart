@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -16,7 +18,11 @@ import 'package:pawquest/screens/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: '.env', isOptional: true);
+  try {
+    await dotenv.load(fileName: '.env', isOptional: true);
+  } catch (error) {
+    debugPrint('Environment file was not loaded: $error');
+  }
 
   try {
     if (Firebase.apps.isEmpty) {
@@ -32,7 +38,6 @@ void main() async {
   final stepProvider = StepProvider();
   final dailyQuestProvider = DailyQuestProvider();
   stepProvider.attachDailyQuestProvider(dailyQuestProvider);
-  await stepProvider.loadSavedSteps(); // 加载 Firestore / 本地步数
 
   runApp(
     MultiProvider(
@@ -49,6 +54,15 @@ void main() async {
       ],
       child: const PawQuestApp(),
     ),
+  );
+
+  // Firestore may be slow or temporarily unavailable. Loading saved steps
+  // must not block Flutter from drawing its first frame.
+  unawaited(
+    stepProvider.loadSavedSteps().catchError((Object error, StackTrace stack) {
+      debugPrint('Failed to load saved steps: $error');
+      debugPrintStack(stackTrace: stack);
+    }),
   );
 }
 
