@@ -14,7 +14,7 @@ dependencies:
 
   # UI & 字体
   google_fonts: ^6.2.1
-  fl_chart: ^0.69.0
+  fl_chart: ^1.2.0
 
   # 音频（新版，已解决 http 冲突）
   audioplayers: ^6.5.1

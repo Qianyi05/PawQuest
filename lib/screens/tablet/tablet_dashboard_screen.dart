@@ -8,6 +8,7 @@ import '../weather_screen.dart';
 import 'tablet_badge_page.dart';
 import 'tablet_community_page.dart';
 import 'tablet_overview_page.dart';
+import 'tablet_stats_page.dart';
 
 class TabletDashboardScreen extends StatefulWidget {
   final int initialIndex;
@@ -26,6 +27,7 @@ class _TabletDashboardScreenState extends State<TabletDashboardScreen> {
 
   final List<Widget> _pages = [
     const TabletOverviewPage(),
+    const TabletStatsPage(),
     const TabletBadgePage(),
     const FoodStickerScreen(),
     const WeatherScreen(),
@@ -76,6 +78,11 @@ class _TabletDashboardScreenState extends State<TabletDashboardScreen> {
                   icon: Icon(Icons.dashboard_outlined),
                   selectedIcon: Icon(Icons.dashboard),
                   label: Text('Overview'),
+                ),
+                NavigationRailDestination(
+                  icon: Icon(Icons.insights_outlined),
+                  selectedIcon: Icon(Icons.insights),
+                  label: Text('Stats'),
                 ),
                 NavigationRailDestination(
                   icon: Icon(Icons.emoji_events_outlined),
