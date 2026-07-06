@@ -3,11 +3,54 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    function validProfile(data) {
+      return (!('nickname' in data) || data.nickname is string)
+             && (!('bio' in data) || data.bio is string)
+             && (!('city' in data) || data.city is string)
+             && (!('age' in data) || data.age == null
+                 || (data.age is int && data.age >= 1 && data.age <= 120));
+    }
+
     // ---------------------------------------------------------------
-    // 用户数据：本人可读写自己的所有子集合
+    // 用户资料：登录用户可查看公开资料；仅本人可修改根文档。
     // ---------------------------------------------------------------
-    match /users/{userId}/{document=**} {
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow create, update: if request.auth != null
+                            && request.auth.uid == userId
+                            && validProfile(request.resource.data);
+      allow delete: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // 默认情况下，用户只可读写自己的私有子集合。
+    match /users/{userId}/{subcollection}/{documentId}/{document=**} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Following 使用镜像文档。两项必须在同一个 batch 中同时创建或删除，
+    // 防止客户端伪造单边 follower/following 记录。
+    match /users/{userId}/following/{targetId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+                    && request.auth.uid == userId
+                    && userId != targetId
+                    && existsAfter(/databases/$(database)/documents/users/$(targetId)/followers/$(userId));
+      allow delete: if request.auth != null
+                    && request.auth.uid == userId
+                    && !existsAfter(/databases/$(database)/documents/users/$(targetId)/followers/$(userId));
+      allow update: if false;
+    }
+
+    match /users/{userId}/followers/{followerId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+                    && request.auth.uid == followerId
+                    && userId != followerId
+                    && existsAfter(/databases/$(database)/documents/users/$(followerId)/following/$(userId));
+      allow delete: if request.auth != null
+                    && request.auth.uid == followerId
+                    && !existsAfter(/databases/$(database)/documents/users/$(followerId)/following/$(userId));
+      allow update: if false;
     }
 
     // 通知：允许"别人"在你名下创建一条通知（点赞/评论触发）。

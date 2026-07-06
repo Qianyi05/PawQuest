@@ -134,64 +134,55 @@ class ForumService {
     final postData = postSnap.data();
     final preview = _preview(postData?['content']);
 
-    await postRef.collection('comments').add({
+    final commentRef = postRef.collection('comments').doc();
+    final commentData = <String, dynamic>{
       'authorId': uid,
       'authorName': actorName,
       'content': body,
       'parentId': parentId, // null for top-level comments
-      'rootId': rootId, // thread root (top-level comment id); null for top-level
+      'rootId':
+          rootId, // thread root (top-level comment id); null for top-level
       'replyToName': parentName, // addressee, for the "↳ name" mention
       'timestamp': FieldValue.serverTimestamp(),
-    });
+    };
+
+    String? recipientId;
+    String? notificationType;
 
     if (parentId == null) {
       // Top-level comment -> notify the post author.
       final authorId = postData?['authorId'] as String?;
       if (authorId != null && authorId != uid) {
-        await _addNotification(
-          toUid: authorId,
-          type: 'comment',
-          postId: postId,
-          postPreview: preview,
-          actorId: uid,
-          actorName: actorName,
-          commentText: body,
-        );
+        recipientId = authorId;
+        notificationType = 'comment';
       }
     } else if (parentAuthorId != null && parentAuthorId != uid) {
       // Reply -> notify the author of the comment being replied to.
-      await _addNotification(
-        toUid: parentAuthorId,
-        type: 'reply',
-        postId: postId,
-        postPreview: preview,
-        actorId: uid,
-        actorName: actorName,
-        commentText: body,
-      );
+      recipientId = parentAuthorId;
+      notificationType = 'reply';
     }
-  }
 
-  /// Writes a single notification document under the recipient's profile.
-  Future<void> _addNotification({
-    required String toUid,
-    required String type,
-    required String postId,
-    required String postPreview,
-    required String actorId,
-    required String actorName,
-    required String commentText,
-  }) async {
-    await _db.collection('users').doc(toUid).collection('notifications').add({
-      'type': type,
-      'postId': postId,
-      'postPreview': postPreview,
-      'actorId': actorId,
-      'actorName': actorName,
-      'commentText': commentText,
-      'read': false,
-      'timestamp': FieldValue.serverTimestamp(),
-    });
+    // Commit the comment and notification together so a rejected write cannot
+    // leave the conversation and notification feed inconsistent.
+    final batch = _db.batch()..set(commentRef, commentData);
+    if (recipientId != null && notificationType != null) {
+      final notificationRef = _db
+          .collection('users')
+          .doc(recipientId)
+          .collection('notifications')
+          .doc();
+      batch.set(notificationRef, {
+        'type': notificationType,
+        'postId': postId,
+        'postPreview': preview,
+        'actorId': uid,
+        'actorName': actorName,
+        'commentText': body,
+        'read': false,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+    }
+    await batch.commit();
   }
 
   // ---------------------------------------------------------- notifications

@@ -29,4 +29,24 @@ void main() {
     expect(StepMath.nonNegative(-10), 0);
     expect(StepMath.nonNegative(250), 250);
   });
+
+  group('StepMath.healthDelta', () {
+    test('adds only HealthKit steps not already stored locally', () {
+      expect(
+        StepMath.healthDelta(healthToday: 7500, localToday: 5000),
+        2500,
+      );
+    });
+
+    test('does not duplicate equal or older HealthKit totals', () {
+      expect(
+        StepMath.healthDelta(healthToday: 5000, localToday: 5000),
+        0,
+      );
+      expect(
+        StepMath.healthDelta(healthToday: 4000, localToday: 5000),
+        0,
+      );
+    });
+  });
 }

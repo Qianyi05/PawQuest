@@ -92,8 +92,11 @@ class StepProvider with ChangeNotifier {
   Future<void> syncFromHealth() async {
     final healthToday = await _health.todaySteps();
     if (healthToday == null) return;
-    if (healthToday > _todaySteps) {
-      final delta = healthToday - _todaySteps;
+    final delta = StepMath.healthDelta(
+      healthToday: healthToday,
+      localToday: _todaySteps,
+    );
+    if (delta > 0) {
       _currentStep += delta;
       _todaySteps = healthToday;
       notifyListeners();

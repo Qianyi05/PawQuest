@@ -13,4 +13,12 @@ class StepMath {
   }
 
   static int nonNegative(int steps) => steps < 0 ? 0 : steps;
+
+  /// Returns only the HealthKit steps not already represented locally.
+  static int healthDelta({
+    required int healthToday,
+    required int localToday,
+  }) {
+    return nonNegative(healthToday - localToday);
+  }
 }

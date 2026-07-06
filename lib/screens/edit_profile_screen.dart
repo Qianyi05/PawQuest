@@ -8,6 +8,7 @@ import 'package:pawquest/providers/theme_provider.dart';
 import 'package:pawquest/theme/app_palette.dart';
 import 'package:pawquest/widgets/user_avatar.dart';
 import 'package:pawquest/widgets/user_name.dart';
+import 'package:pawquest/utils/profile_validation.dart';
 
 /// Unified "edit user info" screen: change display name, character, avatar,
 /// and personal info (city / age / bio) in one place.
@@ -37,7 +38,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   AppPalette p = AppPalette.all.first;
 
   static const List<String> _cats = [
-    'cat1', 'cat2', 'cat3', 'cat4', 'cat5', 'cat6', 'cat7', 'cat8', 'cat9'
+    'cat1',
+    'cat2',
+    'cat3',
+    'cat4',
+    'cat5',
+    'cat6',
+    'cat7',
+    'cat8',
+    'cat9'
   ];
 
   late TextEditingController _nameController;
@@ -87,21 +96,32 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
+    int? parsedAge;
+    try {
+      parsedAge = ProfileValidation.parseAge(_ageController.text);
+    } on FormatException catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.message)),
+      );
+      return;
+    }
+
     setState(() => _saving = true);
     try {
-      final parsedAge = int.tryParse(_ageController.text.trim());
-      await user.updateDisplayName(name);
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .update({
+      // Use merge instead of update so profile saving also works for accounts
+      // whose Firestore user document has not been created yet. Firestore is
+      // written first: otherwise Auth could keep the new display name while
+      // the remaining profile fields fail to persist.
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        'email': user.email,
         'nickname': name,
         'cat': _selectedCat,
         'avatarUrl': _avatarUrl,
         'bio': _bioController.text.trim(),
         'city': _cityController.text.trim(),
         'age': parsedAge,
-      });
+      }, SetOptions(merge: true));
+      await user.updateDisplayName(name);
       // Drop cached avatar & name so changes show immediately everywhere.
       UserAvatar.invalidate(user.uid);
       UserName.invalidate(user.uid);
