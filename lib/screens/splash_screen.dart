@@ -68,19 +68,12 @@ class _SplashScreenState extends State<SplashScreen>
                   ),
                   // 底部按钮：按屏幕宽度比例定位，紧贴背景里鱼/饼干图标的右侧
                   Align(
-                    alignment: isTablet
-                        ? Alignment.bottomCenter
-                        : Alignment.bottomLeft,
+                    alignment: Alignment.bottomCenter,
                     child: Padding(
-                      padding: EdgeInsets.only(
-                        left: isTablet ? 0 : size.width * 0.32,
-                        bottom: 110,
-                      ),
+                      padding: const EdgeInsets.only(bottom: 80),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: isTablet
-                            ? CrossAxisAlignment.center
-                            : CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           _welcomeButton(
                             'Login',
@@ -92,6 +85,7 @@ class _SplashScreenState extends State<SplashScreen>
                             'Register',
                             () => _goTo(const RegisterScreen()),
                             width: isTablet ? 420 : null,
+                            primary: false,
                           ),
                         ],
                       ),
@@ -139,6 +133,7 @@ class _SplashScreenState extends State<SplashScreen>
                         'Register',
                         () => _goTo(const RegisterScreen()),
                         width: double.infinity,
+                        primary: false,
                       ),
                     ],
                   ),
@@ -155,20 +150,37 @@ class _SplashScreenState extends State<SplashScreen>
     String label,
     VoidCallback onTap, {
     double? width,
+    bool primary = true,
   }) {
+    const textStyle = TextStyle(
+        fontSize: 17, fontWeight: FontWeight.w700, letterSpacing: 0.5);
     return SizedBox(
-      width: width ?? MediaQuery.of(context).size.width * 0.5,
-      height: 50,
-      child: TextButton(
-        onPressed: onTap,
-        style: TextButton.styleFrom(
-          foregroundColor: p.text,
-          shape: const StadiumBorder(),
-          textStyle: const TextStyle(
-              fontSize: 17, fontWeight: FontWeight.w700, letterSpacing: 0.5),
-        ),
-        child: Text(label),
-      ),
+      width: width ?? MediaQuery.of(context).size.width * 0.72,
+      height: 54,
+      child: primary
+          ? ElevatedButton(
+              onPressed: onTap,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: p.primary,
+                foregroundColor: Colors.white,
+                elevation: 3,
+                shadowColor: p.primary.withValues(alpha: 0.45),
+                shape: const StadiumBorder(),
+                textStyle: textStyle,
+              ),
+              child: Text(label),
+            )
+          : OutlinedButton(
+              onPressed: onTap,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: p.primary,
+                backgroundColor: Colors.white,
+                side: BorderSide(color: p.primary, width: 1.8),
+                shape: const StadiumBorder(),
+                textStyle: textStyle,
+              ),
+              child: Text(label),
+            ),
     );
   }
 }

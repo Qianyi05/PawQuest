@@ -60,13 +60,10 @@ flutter:
     - assets/images/default_profile.png
     - assets/config/cities.json
     - assets/config/food_details.json
-    - assets/images/forum_background.png
     - assets/images/food/
     - assets/images/tape.png
     - assets/images/title/
     - assets/images/steps.png
-    - assets/images/talk_bg.jpeg
-    - assets/images/profiles_bg.jpeg
     - .env
 fonts:
     - family: Fredoka
