@@ -167,7 +167,7 @@ class _WorldMapScreenState extends State<WorldMapScreen> {
                 ),
               ),
 
-              /// 底部按钮组
+              /// Bottom action group.
               Positioned(
                 bottom: 20,
                 left: 0,
@@ -223,7 +223,7 @@ class _WorldMapScreenState extends State<WorldMapScreen> {
             context: context,
             barrierDismissible: true,
             barrierLabel: '',
-            barrierColor: Colors.black.withValues(alpha: 0.2), // 半透明背景
+            barrierColor: Colors.black.withValues(alpha: 0.2), // Translucent scrim
             pageBuilder: (_, __, ___) => const SizedBox(),
             transitionBuilder: (_, anim, __, child) {
               return Transform.scale(
@@ -277,7 +277,7 @@ class _WorldMapScreenState extends State<WorldMapScreen> {
                           ),
                           const SizedBox(height: 18),
 
-                          // 🔥 勋章图案
+                          // Badge artwork.
                           Container(
                             padding: const EdgeInsets.all(14),
                             decoration: BoxDecoration(

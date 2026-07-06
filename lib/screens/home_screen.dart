@@ -210,7 +210,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       .doc(user.uid)
                       .snapshots(),
                   builder: (context, snap) {
-                    // 数据没回来前不显示猫,避免先显示 cat1(白猫)再切换的闪烁
+                    // Hide the cat until data arrives to avoid a cat1 flash.
                     if (!snap.hasData) return const SizedBox.shrink();
                     final data = snap.data!.data() as Map<String, dynamic>?;
                     final catName = data?['cat'] ?? 'cat1';

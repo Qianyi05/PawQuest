@@ -8,9 +8,9 @@ import 'package:provider/provider.dart';
 import 'package:pawquest/providers/daily_quest_provider.dart';
 import 'package:pawquest/providers/step_provider.dart';
 import 'package:pawquest/providers/theme_provider.dart';
-import 'package:pawquest/screens/responsive_main_screen.dart'; // 主界面
-import 'package:pawquest/screens/splash_screen.dart'; // 启动页
-import 'package:pawquest/screens/login_screen.dart'; // 登录页
+import 'package:pawquest/screens/responsive_main_screen.dart'; // Main shell
+import 'package:pawquest/screens/splash_screen.dart'; // Launch screen
+import 'package:pawquest/screens/login_screen.dart'; // Login screen
 import 'package:pawquest/screens/world_map_screen.dart';
 import 'package:pawquest/screens/foodsticker_screen.dart';
 import 'package:pawquest/screens/weather_screen.dart';
@@ -34,7 +34,7 @@ void main() async {
     }
   }
 
-  // 🔥 StepProvider 只初始化一次（关键）
+  // Initialize StepProvider exactly once.
   final stepProvider = StepProvider();
   final dailyQuestProvider = DailyQuestProvider();
   stepProvider.attachDailyQuestProvider(dailyQuestProvider);
@@ -76,11 +76,12 @@ class PawQuestApp extends StatelessWidget {
       title: 'PawQuest',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.themeFor(palette),
-      initialRoute: '/', // 设置初始路由
+      initialRoute: '/', // Initial route
       routes: {
         '/': (context) => const SplashScreen(),
-        '/login': (context) => const LoginScreen(), // ✅ 登录页路由已注册
-        '/main': (context) => const ResponsiveMainScreen(), // ✅ 主界面路由（可选）
+        '/login': (context) => const LoginScreen(), // Registered login route
+        '/main': (context) =>
+            const ResponsiveMainScreen(), // Optional main-shell route
         '/map': (context) => const WorldMapScreen(),
         '/badges': (context) => const FoodStickerScreen(),
         '/weather': (context) => const WeatherScreen(),

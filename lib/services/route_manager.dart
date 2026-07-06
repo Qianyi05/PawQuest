@@ -19,7 +19,7 @@ class RouteManager {
     _onCityUnlocked = callback;
   }
 
-  /// 加载当前用户已解锁的所有城市（根据步数）
+  /// Loads every city unlocked by the current user's step total.
   Future<List<Map<String, dynamic>>> loadUnlockedCities(
       int currentSteps) async {
     final configJson = await rootBundle.loadString('assets/config/cities.json');
@@ -55,7 +55,7 @@ class RouteManager {
     return unlocked;
   }
 
-  /// 检查是否达到了新的城市步数要求，触发解锁逻辑（只触发一个）
+  /// Checks the next city threshold and triggers at most one unlock.
   Future<void> checkAndUnlockCities(int currentSteps) async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
@@ -76,7 +76,7 @@ class RouteManager {
       final int stepRequired = data['stepRequired'];
 
       if (cityOrder == unlockedOrder + 1 && currentSteps >= stepRequired) {
-        // 解锁新城市
+        // Unlock the newly reached city.
         await userRef.set(
           {'currentCityOrder': cityOrder},
           SetOptions(merge: true),

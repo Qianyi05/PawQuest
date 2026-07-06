@@ -6,7 +6,7 @@ import 'package:pawquest/providers/theme_provider.dart';
 import 'package:pawquest/theme/app_palette.dart';
 
 class SplashScreen extends StatefulWidget {
-  final VoidCallback? onToggleTheme; // 可选：从上层传入主题切换
+  final VoidCallback? onToggleTheme; // Optional theme toggle from the parent.
 
   const SplashScreen({super.key, this.onToggleTheme});
 
@@ -51,7 +51,7 @@ class _SplashScreenState extends State<SplashScreen>
     final useLandscapeTabletLayout = isTablet && size.width > size.height;
 
     return Scaffold(
-      // 给深色背景，避免看起来像“白屏”
+      // Use a dark fallback so image loading never looks like a white screen.
       backgroundColor: Colors.black,
       body: FadeTransition(
         opacity: _fadeIn,
@@ -59,14 +59,14 @@ class _SplashScreenState extends State<SplashScreen>
             ? _landscapeTabletWelcome()
             : Stack(
                 children: [
-                  // 背景图
+                  // Background artwork.
                   Positioned.fill(
                     child: Image.asset(
                       'assets/images/logo.jpeg',
                       fit: BoxFit.cover,
                     ),
                   ),
-                  // 底部按钮：按屏幕宽度比例定位，紧贴背景里鱼/饼干图标的右侧
+                  // Bottom actions aligned with the artwork on compact screens.
                   Align(
                     alignment: Alignment.bottomCenter,
                     child: Padding(

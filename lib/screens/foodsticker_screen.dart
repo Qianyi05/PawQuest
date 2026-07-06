@@ -1,5 +1,5 @@
 // --------------------------------------------------------------
-// Food Sticker Screen (Food Journey 手帐页)
+// Food Sticker Screen (Food Journey album)
 // --------------------------------------------------------------
 
 import 'dart:math';
@@ -15,7 +15,7 @@ import '../theme/app_palette.dart';
 
 //
 // --------------------------------------------------------------
-// ① 单个贴纸（胶带 + 图片 + 城市名字）
+// 1. A single sticker: tape, image, and city name.
 // --------------------------------------------------------------
 //
 class FoodSticker extends StatelessWidget {
@@ -36,11 +36,11 @@ class FoodSticker extends StatelessWidget {
     return Transform.rotate(
       angle: angle,
       child: SizedBox(
-        height: 200,      // ⭐ 固定总高度（不会再超出）
+        height: 200, // Fixed total height prevents overflow.
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // ⭐ 胶带
+            // Decorative tape.
             Image.asset(
               "assets/images/tape.png",
               width: 50,
@@ -50,7 +50,7 @@ class FoodSticker extends StatelessWidget {
 
             const SizedBox(height: 5),
 
-            // ⭐ 图片区域（使用 Flexible 自动适应）
+            // Flexible image area.
             Flexible(
               child: Container(
                 decoration: BoxDecoration(
@@ -77,7 +77,7 @@ class FoodSticker extends StatelessWidget {
 
             const SizedBox(height: 6),
 
-            // ⭐ 城市名字
+            // City name.
             Text(
               cityName,
               style: TextStyle(
@@ -100,7 +100,7 @@ class FoodSticker extends StatelessWidget {
 
 //
 // --------------------------------------------------------------
-// ② 单页布局：不重叠的 2×2 网格 + 每个贴纸随机轻微旋转
+// 2. One page: a non-overlapping 2x2 grid with subtle sticker rotation.
 // --------------------------------------------------------------
 //
 class FoodPage extends StatelessWidget {
@@ -148,13 +148,13 @@ class FoodPage extends StatelessWidget {
 
 //
 // --------------------------------------------------------------
-// ③ 主页面 FoodStickerScreen（Food Journey）
+// 3. Main Food Journey screen.
 // --------------------------------------------------------------
 //
 class FoodStickerScreen extends StatelessWidget {
   const FoodStickerScreen({super.key});
 
-  // ⭐ Firestore 解锁逻辑：读取 food（图片名）+ name（城市名）
+  // Firestore unlock data: food image name and city name.
   Future<List<Map<String, String>>> _getUnlockedFoods(int steps) async {
     final snapshot = await FirebaseFirestore.instance
         .collection("cities")
@@ -185,7 +185,7 @@ class FoodStickerScreen extends StatelessWidget {
     return Scaffold(
       body: Stack(
         children: [
-          // ⭐ 背景图
+          // Background artwork.
           Positioned.fill(
             child: Image.asset(
               "assets/images/food_bg.jpeg",
@@ -219,7 +219,7 @@ class FoodStickerScreen extends StatelessWidget {
                   children: [
                     const SizedBox(height: 5),
 
-                    // ⭐ 顶部 Food Journey PNG
+                    // Food Journey title artwork.
                     Image.asset(
                       "assets/images/title/food_journey.png",
                       height: 120,
@@ -252,7 +252,7 @@ class FoodStickerScreen extends StatelessWidget {
 
                     const SizedBox(height: 10),
 
-                    // ⭐ 带翻页动画的 PageView
+                    // PageView with page-turn animation.
                     Expanded(
                       child: PageView.builder(
                         controller: PageController(viewportFraction: 0.92),

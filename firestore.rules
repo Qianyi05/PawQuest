@@ -12,7 +12,8 @@ service cloud.firestore {
     }
 
     // ---------------------------------------------------------------
-    // 用户资料：登录用户可查看公开资料；仅本人可修改根文档。
+    // User profiles: signed-in users may read public profile data; only the
+    // owner may modify the root document.
     // ---------------------------------------------------------------
     match /users/{userId} {
       allow read: if request.auth != null;
@@ -22,13 +23,13 @@ service cloud.firestore {
       allow delete: if request.auth != null && request.auth.uid == userId;
     }
 
-    // 默认情况下，用户只可读写自己的私有子集合。
+    // By default, users may only read and write their own private subcollections.
     match /users/{userId}/{subcollection}/{documentId}/{document=**} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // Following 使用镜像文档。两项必须在同一个 batch 中同时创建或删除，
-    // 防止客户端伪造单边 follower/following 记录。
+    // Following uses mirrored documents. Both entries must be created or
+    // deleted in the same batch to prevent forged one-sided relationships.
     match /users/{userId}/following/{targetId} {
       allow read: if request.auth != null;
       allow create: if request.auth != null
@@ -53,9 +54,9 @@ service cloud.firestore {
       allow update: if false;
     }
 
-    // 通知：允许"别人"在你名下创建一条通知（点赞/评论触发）。
-    // 读取/标记已读/删除仍只限本人（由上面的递归规则覆盖）。
-    // 创建者必须把 actorId 设成自己，且 read 必须为 false，防止伪造。
+    // Notifications: another user may create a like/comment notification for
+    // the recipient. Reading, marking as read, and deletion remain owner-only.
+    // The creator must use their own actorId and an initial read value of false.
     match /users/{userId}/notifications/{notifId} {
       allow create: if request.auth != null
                     && request.resource.data.actorId == request.auth.uid
@@ -63,7 +64,7 @@ service cloud.firestore {
     }
 
     // ---------------------------------------------------------------
-    // 城市：所有人只读
+    // Cities: publicly readable and never client-writable.
     // ---------------------------------------------------------------
     match /cities/{cityId} {
       allow read: if true;
@@ -75,8 +76,8 @@ service cloud.firestore {
     }
 
     // ---------------------------------------------------------------
-    // 帖子：所有人可读；作者可全权改/删；
-    // 其他登录用户"只能"改 likes / likedBy 两个字段（点赞）。
+    // Posts: publicly readable; authors may edit or delete their own posts.
+    // Other signed-in users may only update the likes and likedBy fields.
     // ---------------------------------------------------------------
     match /posts/{postId} {
       allow read: if true;
@@ -90,7 +91,8 @@ service cloud.firestore {
       allow delete: if request.auth != null
                     && resource.data.authorId == request.auth.uid;
 
-      // 评论是帖子的子集合：所有人可读；登录用户可发；只有评论作者能删。
+      // Comments are publicly readable. Signed-in users may create comments,
+      // and only the comment author may delete one.
       match /comments/{commentId} {
         allow read: if true;
         allow create: if request.auth != null
@@ -102,7 +104,8 @@ service cloud.firestore {
     }
 
     // ---------------------------------------------------------------
-    // 天气 / 每日任务：暂时允许登录用户读写（后续可按实际集合收紧）
+    // Weather and daily quests: currently readable and writable by signed-in
+    // users; these rules can be narrowed when the final collection model settles.
     // ---------------------------------------------------------------
     match /dailyTasks/{document=**} {
       allow read, write: if request.auth != null;

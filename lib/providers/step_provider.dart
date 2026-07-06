@@ -62,7 +62,7 @@ class StepProvider with ChangeNotifier {
 
     _subscription = Pedometer.stepCountStream.listen(
       _onStep,
-      onError: (error) => debugPrint('步数监听错误: $error'),
+      onError: (error) => debugPrint('Step listener error: $error'),
     );
   }
 

@@ -12,20 +12,20 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # UI & 字体
+  # UI and fonts
   google_fonts: ^6.2.1
   fl_chart: ^1.2.0
 
-  # 音频（新版，已解决 http 冲突）
+  # Audio (updated version resolves the HTTP dependency conflict)
   audioplayers: ^6.5.1
 
-  # Firebase（保持兼容的新版组合）
+  # Firebase (compatible package versions)
   firebase_core: ^4.11.0
   firebase_auth: ^6.5.4
   cloud_firestore: ^6.6.0
   firebase_storage: ^13.4.3
 
-  # App 逻辑
+  # Application logic
   provider: ^6.1.5
   http: ^1.6.0
   geolocator: ^12.0.0
