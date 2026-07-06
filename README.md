@@ -179,16 +179,6 @@ pattern, heatmap). A requirement-to-test traceability matrix is in the design do
 
 ---
 
-## 🗺️ Roadmap
-
-- [x] iPad edition — navigation-rail dashboards + step-statistics analytics
-- [ ] iPad Split View / Slide Over polish
-- [ ] Apple Watch complications (step ring on the watch face)
-- [ ] Android Health Connect (parity with the iOS HealthKit path)
-- [ ] Richer social graph and seasonal content
-
----
-
 ## 👥 Team
 Anchen Peng -- 11031608
 
